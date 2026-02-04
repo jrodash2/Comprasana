@@ -4,6 +4,41 @@
     <div>
       <h5 class="mb-1 text-dark">Proceso de compra</h5>
       <small class="text-muted">Seguimiento por pasos</small>
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-1">
+        <div class="small text-muted">
+          <div>
+            <span class="fw-semibold text-dark">Tipo de proceso:</span>
+            {% if solicitud.tipo_proceso %}
+              {{ solicitud.tipo_proceso.nombre|default:solicitud.get_tipo_proceso_display }}
+            {% else %}
+              <span class="text-muted">En análisis</span>
+            {% endif %}
+          </div>
+
+          {% if solicitud.subtipo_proceso %}
+            <div>
+              <span class="fw-semibold text-dark">Subtipo:</span>
+              {{ solicitud.subtipo_proceso.nombre }}
+            </div>
+          {% elif solicitud.subtipo_baja_cuantia %}
+            <div>
+              <span class="fw-semibold text-dark">Subtipo:</span>
+              {{ solicitud.get_subtipo_baja_cuantia_display }}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="small text-muted text-end">
+          <div>
+            <span class="fw-semibold text-dark">Analista:</span>
+            {% if solicitud.analista_asignado %}
+              {{ solicitud.analista_asignado.get_full_name|default:solicitud.analista_asignado.username }}
+            {% else %}
+              <span class="text-muted">Sin asignar</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
     </div>
     <div class="pc-timeline-actions d-flex gap-2">
       {% if es_admin_proceso %}
