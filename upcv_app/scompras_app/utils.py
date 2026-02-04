@@ -15,6 +15,14 @@ def is_presupuesto(user):
     return user.is_authenticated and user.groups.filter(name="PRESUPUESTO").exists()
 
 
+def is_scompras(user):
+    return user.is_authenticated and user.groups.filter(name="scompras").exists()
+
+
+def is_analista(user):
+    return user.is_authenticated and user.groups.filter(name__iexact="analista").exists()
+
+
 def es_presupuesto(user):
     return user.is_authenticated and user.groups.filter(name="PRESUPUESTO").exists()
 
@@ -79,3 +87,45 @@ def grupo_requerido(*nombres_grupos):
             return redirect(reverse('scompras:acceso_denegado'))
         return _wrapped_view
     return decorador
+
+
+def obtener_pasos_catalogo(solicitud):
+    from django.db.models import Q
+    from scompras_app.models import ProcesoCompraPaso
+
+    if not solicitud.tipo_proceso:
+        return []
+    filtro = Q(tipo=solicitud.tipo_proceso, activo=True)
+    if solicitud.subtipo_proceso:
+        filtro &= (Q(subtipo__isnull=True) | Q(subtipo=solicitud.subtipo_proceso))
+    else:
+        filtro &= Q(subtipo__isnull=True)
+    return list(ProcesoCompraPaso.objects.filter(filtro).order_by("numero"))
+
+
+def inicializar_pasos_estado(solicitud):
+    from scompras_app.models import SolicitudPasoEstado
+
+    pasos = obtener_pasos_catalogo(solicitud)
+    for paso in pasos:
+        SolicitudPasoEstado.objects.get_or_create(solicitud=solicitud, paso=paso)
+
+
+def recalcular_paso_actual(solicitud):
+    pasos = obtener_pasos_catalogo(solicitud)
+    if not pasos:
+        solicitud.paso_actual = 1
+        solicitud.save(update_fields=["paso_actual"])
+        return
+    estados = {
+        estado.paso_id: estado
+        for estado in solicitud.pasos_estado.filter(paso__in=pasos)
+    }
+    siguiente = None
+    for paso in pasos:
+        estado = estados.get(paso.id)
+        if not estado or not estado.completado:
+            siguiente = paso.numero
+            break
+    solicitud.paso_actual = siguiente if siguiente is not None else pasos[-1].numero
+    solicitud.save(update_fields=["paso_actual"])
