@@ -9,7 +9,7 @@
           <div>
             <span class="fw-semibold text-dark">Tipo de proceso:</span>
             {% if solicitud.tipo_proceso and solicitud.tipo_proceso|stringformat:"s" != "" %}
-              {{ solicitud.tipo_proceso.nombre|default:solicitud.get_tipo_proceso_display }}
+              {{ solicitud.tipo_proceso.nombre }}
             {% else %}
               <span class="text-muted">En análisis</span>
             {% endif %}
