@@ -64,12 +64,10 @@
                   <div
                     class="pc-step {{ estado_clase }}{% if not puede_editar_proceso %} pc-disabled{% endif %}"
                     data-step-index="{{ forloop.counter0 }}"
+                    {% if puede_editar_proceso %}
                     data-bs-toggle="modal"
                     data-bs-target="#modalPaso"
-                    data-bs-placement="top"
-                    data-bs-html="true"
-                    data-tooltip="true"
-                    title="<div><strong>Paso {{ paso.numero }}</strong></div><div>{{ paso.titulo }}</div>{% if paso.duracion_referencia %}<div class='text-muted'>{{ paso.duracion_referencia }}</div>{% endif %}<div>Estado: {{ estado_label }}</div>"
+                    {% endif %}
                     aria-label="Paso {{ paso.numero }} - {{ paso.titulo }}. Estado: {{ estado_label }}"
                     role="button"
                     tabindex="0"
@@ -84,7 +82,15 @@
                     data-paso-completado="{% if estado and estado.completado %}1{% else %}0{% endif %}"
                     style="animation-delay: {{ forloop.counter|add:-1 }}0ms"
                   >
-                    <div class="pc-dot">{{ estado_icono }}</div>
+                    <div
+                      class="pc-dot"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      data-bs-html="true"
+                      title="<div><strong>Paso {{ paso.numero }}</strong></div><div>{{ paso.titulo }}</div>{% if paso.duracion_referencia %}<div class='text-muted'>{{ paso.duracion_referencia }}</div>{% endif %}<div>Estado: {{ estado_label }}</div>"
+                    >
+                      {{ estado_icono }}
+                    </div>
                   </div>
                 {% endwith %}
               {% elif paso.numero == solicitud.paso_actual %}
@@ -92,12 +98,10 @@
                   <div
                     class="pc-step {{ estado_clase }}{% if not puede_editar_proceso %} pc-disabled{% endif %}"
                     data-step-index="{{ forloop.counter0 }}"
+                    {% if puede_editar_proceso %}
                     data-bs-toggle="modal"
                     data-bs-target="#modalPaso"
-                    data-bs-placement="top"
-                    data-bs-html="true"
-                    data-tooltip="true"
-                    title="<div><strong>Paso {{ paso.numero }}</strong></div><div>{{ paso.titulo }}</div>{% if paso.duracion_referencia %}<div class='text-muted'>{{ paso.duracion_referencia }}</div>{% endif %}<div>Estado: {{ estado_label }}</div>"
+                    {% endif %}
                     aria-label="Paso {{ paso.numero }} - {{ paso.titulo }}. Estado: {{ estado_label }}"
                     role="button"
                     tabindex="0"
@@ -112,7 +116,15 @@
                     data-paso-completado="{% if estado and estado.completado %}1{% else %}0{% endif %}"
                     style="animation-delay: {{ forloop.counter|add:-1 }}0ms"
                   >
-                    <div class="pc-dot">{{ estado_icono }}</div>
+                    <div
+                      class="pc-dot"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      data-bs-html="true"
+                      title="<div><strong>Paso {{ paso.numero }}</strong></div><div>{{ paso.titulo }}</div>{% if paso.duracion_referencia %}<div class='text-muted'>{{ paso.duracion_referencia }}</div>{% endif %}<div>Estado: {{ estado_label }}</div>"
+                    >
+                      {{ estado_icono }}
+                    </div>
                   </div>
                 {% endwith %}
               {% else %}
@@ -120,12 +132,10 @@
                   <div
                     class="pc-step {{ estado_clase }}{% if not puede_editar_proceso %} pc-disabled{% endif %}"
                     data-step-index="{{ forloop.counter0 }}"
+                    {% if puede_editar_proceso %}
                     data-bs-toggle="modal"
                     data-bs-target="#modalPaso"
-                    data-bs-placement="top"
-                    data-bs-html="true"
-                    data-tooltip="true"
-                    title="<div><strong>Paso {{ paso.numero }}</strong></div><div>{{ paso.titulo }}</div>{% if paso.duracion_referencia %}<div class='text-muted'>{{ paso.duracion_referencia }}</div>{% endif %}<div>Estado: {{ estado_label }}</div>"
+                    {% endif %}
                     aria-label="Paso {{ paso.numero }} - {{ paso.titulo }}. Estado: {{ estado_label }}"
                     role="button"
                     tabindex="0"
@@ -140,7 +150,15 @@
                     data-paso-completado="{% if estado and estado.completado %}1{% else %}0{% endif %}"
                     style="animation-delay: {{ forloop.counter|add:-1 }}0ms"
                   >
-                    <div class="pc-dot">{{ estado_icono }}</div>
+                    <div
+                      class="pc-dot"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      data-bs-html="true"
+                      title="<div><strong>Paso {{ paso.numero }}</strong></div><div>{{ paso.titulo }}</div>{% if paso.duracion_referencia %}<div class='text-muted'>{{ paso.duracion_referencia }}</div>{% endif %}<div>Estado: {{ estado_label }}</div>"
+                    >
+                      {{ estado_icono }}
+                    </div>
                   </div>
                 {% endwith %}
               {% endif %}
@@ -227,7 +245,6 @@
   }
 
   .pc-step.pc-disabled {
-    pointer-events: none;
     opacity: .6;
   }
 
@@ -508,7 +525,7 @@
   const initTooltips = () => {
     if (typeof bootstrap !== 'undefined') {
       const tooltipTriggerList = [].slice.call(
-        document.querySelectorAll('[data-tooltip="true"]')
+        document.querySelectorAll('[data-bs-toggle="tooltip"]')
       );
       tooltipTriggerList.map((el) => new bootstrap.Tooltip(el));
     }
