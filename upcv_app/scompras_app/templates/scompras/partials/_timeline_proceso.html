@@ -1,11 +1,11 @@
 {% load custom_filters %}
-<div class="card mt-3">
-  <div class="card-header d-flex flex-wrap justify-content-between align-items-center">
+<div class="pc-timeline mt-3">
+  <div class="pc-timeline-header">
     <div>
-      <h5 class="mb-0">Proceso de compra</h5>
+      <h5 class="mb-1 text-dark">Proceso de compra</h5>
       <small class="text-muted">Seguimiento por pasos</small>
     </div>
-    <div class="d-flex gap-2">
+    <div class="pc-timeline-actions d-flex gap-2">
       {% if es_admin_proceso %}
       <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAsignarAnalista">
         Asignar analista
@@ -16,11 +16,15 @@
       {% endif %}
     </div>
   </div>
-  <div class="card-body">
+  <div class="pc-timeline-body">
     {% if not solicitud.tipo_proceso %}
       <div class="alert alert-info mb-0">Tipo de proceso en análisis.</div>
     {% else %}
-      <div class="timeline-container d-flex flex-wrap gap-2 align-items-center" style="overflow-x:auto;">
+      <div class="timeline-track">
+        <div class="timeline-track-bg"></div>
+        <div class="timeline-progress-fill" style="width:0%"></div>
+      </div>
+      <div class="timeline-steps d-flex flex-wrap justify-content-center gap-2 mt-3 position-relative">
         {% for paso in pasos_catalogo %}
           {% with estado=pasos_estado|get_item:paso.id %}
             {% if estado and estado.completado %}
@@ -30,8 +34,11 @@
                   class="timeline-step {{ estado_clase }}"
                   data-bs-toggle="modal"
                   data-bs-target="#modalPaso"
+                  data-bs-placement="top"
+                  data-bs-html="true"
                   data-tooltip="true"
-                  title="Paso {{ paso.numero }}&#10;{{ paso.titulo }}&#10;{% if paso.duracion_referencia %}Duración: {{ paso.duracion_referencia }}&#10;{% endif %}Estado: {{ estado_label }}"
+                  title="<div><strong>Paso {{ paso.numero }}</strong></div><div>{{ paso.titulo }}</div>{% if paso.duracion_referencia %}<div>Duración: {{ paso.duracion_referencia }}</div>{% endif %}<div>Estado: {{ estado_label }}</div>"
+                  aria-label="Paso {{ paso.numero }} - {{ paso.titulo }}. Estado: {{ estado_label }}"
                   data-step-id="{{ paso.id }}"
                   data-step-numero="{{ paso.numero }}"
                   data-step-estado="{{ estado_label }}"
@@ -40,6 +47,7 @@
                   data-paso-numero="{{ paso.numero }}"
                   data-paso-nota="{{ estado.nota|default_if_none:'' }}"
                   data-paso-completado="{% if estado and estado.completado %}1{% else %}0{% endif %}"
+                  style="animation-delay: {{ forloop.counter|add:-1 }}0ms"
                   {% if not puede_editar_proceso %}disabled{% endif %}
                 >
                   {{ estado_icono }}
@@ -52,8 +60,11 @@
                   class="timeline-step {{ estado_clase }}"
                   data-bs-toggle="modal"
                   data-bs-target="#modalPaso"
+                  data-bs-placement="top"
+                  data-bs-html="true"
                   data-tooltip="true"
-                  title="Paso {{ paso.numero }}&#10;{{ paso.titulo }}&#10;{% if paso.duracion_referencia %}Duración: {{ paso.duracion_referencia }}&#10;{% endif %}Estado: {{ estado_label }}"
+                  title="<div><strong>Paso {{ paso.numero }}</strong></div><div>{{ paso.titulo }}</div>{% if paso.duracion_referencia %}<div>Duración: {{ paso.duracion_referencia }}</div>{% endif %}<div>Estado: {{ estado_label }}</div>"
+                  aria-label="Paso {{ paso.numero }} - {{ paso.titulo }}. Estado: {{ estado_label }}"
                   data-step-id="{{ paso.id }}"
                   data-step-numero="{{ paso.numero }}"
                   data-step-estado="{{ estado_label }}"
@@ -62,6 +73,7 @@
                   data-paso-numero="{{ paso.numero }}"
                   data-paso-nota="{{ estado.nota|default_if_none:'' }}"
                   data-paso-completado="{% if estado and estado.completado %}1{% else %}0{% endif %}"
+                  style="animation-delay: {{ forloop.counter|add:-1 }}0ms"
                   {% if not puede_editar_proceso %}disabled{% endif %}
                 >
                   {{ estado_icono }}
@@ -74,8 +86,11 @@
                   class="timeline-step {{ estado_clase }}"
                   data-bs-toggle="modal"
                   data-bs-target="#modalPaso"
+                  data-bs-placement="top"
+                  data-bs-html="true"
                   data-tooltip="true"
-                  title="Paso {{ paso.numero }}&#10;{{ paso.titulo }}&#10;{% if paso.duracion_referencia %}Duración: {{ paso.duracion_referencia }}&#10;{% endif %}Estado: {{ estado_label }}"
+                  title="<div><strong>Paso {{ paso.numero }}</strong></div><div>{{ paso.titulo }}</div>{% if paso.duracion_referencia %}<div>Duración: {{ paso.duracion_referencia }}</div>{% endif %}<div>Estado: {{ estado_label }}</div>"
+                  aria-label="Paso {{ paso.numero }} - {{ paso.titulo }}. Estado: {{ estado_label }}"
                   data-step-id="{{ paso.id }}"
                   data-step-numero="{{ paso.numero }}"
                   data-step-estado="{{ estado_label }}"
@@ -84,6 +99,7 @@
                   data-paso-numero="{{ paso.numero }}"
                   data-paso-nota="{{ estado.nota|default_if_none:'' }}"
                   data-paso-completado="{% if estado and estado.completado %}1{% else %}0{% endif %}"
+                  style="animation-delay: {{ forloop.counter|add:-1 }}0ms"
                   {% if not puede_editar_proceso %}disabled{% endif %}
                 >
                   {{ estado_icono }}
@@ -95,18 +111,72 @@
           <div class="text-muted">No hay pasos configurados para este tipo.</div>
         {% endfor %}
       </div>
-      <div class="mt-3 d-flex flex-wrap gap-3">
-        <span class="d-inline-flex align-items-center gap-2"><span class="badge bg-success">✓</span> Completado</span>
-        <span class="d-inline-flex align-items-center gap-2"><span class="badge bg-primary">●</span> En curso</span>
-        <span class="d-inline-flex align-items-center gap-2"><span class="badge bg-secondary">○</span> Pendiente</span>
+      <div class="pc-timeline-legend mt-3 d-flex flex-wrap gap-2 justify-content-center">
+        <span class="pc-pill pc-pill-success">✓ Completado</span>
+        <span class="pc-pill pc-pill-primary">● En curso</span>
+        <span class="pc-pill pc-pill-neutral">○ Pendiente</span>
       </div>
     {% endif %}
   </div>
 </div>
 
 <style>
-  .timeline-container {
-    justify-content: center;
+  .pc-timeline {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, .06);
+    padding: 20px;
+  }
+
+  .pc-timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 12px;
+  }
+
+  .pc-timeline-actions .btn-outline-primary {
+    color: #0068ab;
+    border-color: #0068ab;
+  }
+
+  .pc-timeline-actions .btn-outline-secondary {
+    color: #064b78;
+    border-color: #064b78;
+  }
+
+  .pc-timeline-body {
+    padding-top: 16px;
+  }
+
+  .timeline-track {
+    position: relative;
+    height: 6px;
+    margin: 0 auto;
+    max-width: 720px;
+  }
+
+  .timeline-track-bg {
+    position: absolute;
+    inset: 0;
+    background: #e5e7eb;
+    border-radius: 999px;
+  }
+
+  .timeline-progress-fill {
+    position: absolute;
+    inset: 0;
+    width: 0%;
+    background: linear-gradient(90deg, #0068ab, #198754);
+    border-radius: 999px;
+    transition: width .3s ease;
+  }
+
+  .timeline-steps {
+    min-height: 40px;
   }
 
   .timeline-step {
@@ -120,36 +190,84 @@
     font-size: 13px;
     cursor: pointer;
     position: relative;
-    transition: all .2s;
+    transition: transform .2s ease, box-shadow .2s ease;
     padding: 0;
+    animation: pcFadeUp .35s ease both;
   }
 
   .timeline-step:hover {
-    transform: scale(1.1);
+    transform: scale(1.08);
+    box-shadow: 0 6px 12px rgba(15, 23, 42, .18);
   }
 
   .timeline-step.completed {
     background: #198754;
     color: #fff;
-    border: 2px solid #146c43;
+    border: 2px solid #157347;
   }
 
   .timeline-step.current {
-    background: #0d6efd;
+    background: #0068ab;
     color: #fff;
-    border: 3px solid #000;
+    border: 3px solid #0f172a;
+    box-shadow: 0 0 0 3px rgba(0, 104, 171, .2);
   }
 
   .timeline-step.pending {
-    background: #dee2e6;
-    color: #212529;
-    border: 2px solid #adb5bd;
+    background: #e5e7eb;
+    color: #0f172a;
+    border: 2px solid #e5e7eb;
   }
 
   .timeline-step.inactive {
     background: #fff;
-    border: 2px dashed #adb5bd;
-    color: #6c757d;
+    border: 2px dashed #e5e7eb;
+    color: #64748b;
+  }
+
+  .pc-timeline-legend .pc-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #0f172a;
+  }
+
+  .pc-pill-success {
+    border-color: rgba(25, 135, 84, .3);
+    color: #157347;
+  }
+
+  .pc-pill-primary {
+    border-color: rgba(0, 104, 171, .3);
+    color: #0068ab;
+  }
+
+  .pc-pill-neutral {
+    border-color: rgba(100, 116, 139, .3);
+    color: #475569;
+  }
+
+  @keyframes pcFadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .timeline-track {
+      display: none;
+    }
   }
 </style>
 
@@ -371,9 +489,40 @@
     }
   };
 
+  const updateTimelineProgress = () => {
+    const timeline = document.querySelector('.pc-timeline');
+    if (!timeline) return;
+    const steps = timeline.querySelectorAll('.timeline-step');
+    const fill = timeline.querySelector('.timeline-progress-fill');
+    if (!fill || steps.length === 0) return;
+    const completed = timeline.querySelectorAll('.timeline-step.completed').length;
+    const currentStep = timeline.querySelector('.timeline-step.current');
+    let progressPercent = 0;
+    if (currentStep) {
+      const currentIndex = Array.from(steps).indexOf(currentStep);
+      const total = steps.length - 1;
+      progressPercent = total > 0 ? (currentIndex / total) * 100 : 0;
+    } else {
+      progressPercent = (completed / steps.length) * 100;
+    }
+    fill.style.width = `${Math.min(100, Math.max(0, progressPercent))}%`;
+  };
+
+  let resizeTimer;
+  const handleResize = () => {
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(updateTimelineProgress, 150);
+  };
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initTooltips);
+    document.addEventListener('DOMContentLoaded', () => {
+      initTooltips();
+      updateTimelineProgress();
+    });
   } else {
     initTooltips();
+    updateTimelineProgress();
   }
+
+  window.addEventListener('resize', handleResize);
 </script>
