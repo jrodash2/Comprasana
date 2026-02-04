@@ -20,34 +20,76 @@
     {% if not solicitud.tipo_proceso %}
       <div class="alert alert-info mb-0">Tipo de proceso en análisis.</div>
     {% else %}
-      <div class="d-flex flex-wrap gap-3 align-items-center" style="overflow-x:auto;">
+      <div class="timeline-container d-flex flex-wrap gap-2 align-items-center" style="overflow-x:auto;">
         {% for paso in pasos_catalogo %}
           {% with estado=pasos_estado|get_item:paso.id %}
-            <button
-              type="button"
-              class="btn btn-light d-flex flex-column align-items-center justify-content-center px-3 py-2 {% if estado and estado.completado %}bg-success text-white{% elif paso.numero == solicitud.paso_actual %}border border-3 border-primary text-primary{% else %}border text-muted{% endif %}"
-              style="min-width: 120px;"
-              data-bs-toggle="modal"
-              data-bs-target="#modalPaso"
-              data-paso-id="{{ paso.id }}"
-              data-paso-titulo="{{ paso.titulo }}"
-              data-paso-numero="{{ paso.numero }}"
-              data-paso-nota="{{ estado.nota|default_if_none:'' }}"
-              data-paso-completado="{% if estado and estado.completado %}1{% else %}0{% endif %}"
-              {% if not puede_editar_proceso %}disabled{% endif %}
-            >
-              <div class="fw-bold">Paso {{ paso.numero }}</div>
-              <div class="small">{{ paso.titulo }}</div>
-              <div class="small mt-1">
-                {% if estado and estado.completado %}
-                  ✓ Completado
-                {% elif paso.numero == solicitud.paso_actual %}
-                  ● En curso
-                {% else %}
-                  ○ Pendiente
-                {% endif %}
-              </div>
-            </button>
+            {% if estado and estado.completado %}
+              {% with estado_label="Completado" estado_clase="completed" estado_icono="✓" %}
+                <button
+                  type="button"
+                  class="timeline-step {{ estado_clase }}"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modalPaso"
+                  data-tooltip="true"
+                  title="Paso {{ paso.numero }}&#10;{{ paso.titulo }}&#10;{% if paso.duracion_referencia %}Duración: {{ paso.duracion_referencia }}&#10;{% endif %}Estado: {{ estado_label }}"
+                  data-step-id="{{ paso.id }}"
+                  data-step-numero="{{ paso.numero }}"
+                  data-step-estado="{{ estado_label }}"
+                  data-paso-id="{{ paso.id }}"
+                  data-paso-titulo="{{ paso.titulo }}"
+                  data-paso-numero="{{ paso.numero }}"
+                  data-paso-nota="{{ estado.nota|default_if_none:'' }}"
+                  data-paso-completado="{% if estado and estado.completado %}1{% else %}0{% endif %}"
+                  {% if not puede_editar_proceso %}disabled{% endif %}
+                >
+                  {{ estado_icono }}
+                </button>
+              {% endwith %}
+            {% elif paso.numero == solicitud.paso_actual %}
+              {% with estado_label="En curso" estado_clase="current" estado_icono=paso.numero %}
+                <button
+                  type="button"
+                  class="timeline-step {{ estado_clase }}"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modalPaso"
+                  data-tooltip="true"
+                  title="Paso {{ paso.numero }}&#10;{{ paso.titulo }}&#10;{% if paso.duracion_referencia %}Duración: {{ paso.duracion_referencia }}&#10;{% endif %}Estado: {{ estado_label }}"
+                  data-step-id="{{ paso.id }}"
+                  data-step-numero="{{ paso.numero }}"
+                  data-step-estado="{{ estado_label }}"
+                  data-paso-id="{{ paso.id }}"
+                  data-paso-titulo="{{ paso.titulo }}"
+                  data-paso-numero="{{ paso.numero }}"
+                  data-paso-nota="{{ estado.nota|default_if_none:'' }}"
+                  data-paso-completado="{% if estado and estado.completado %}1{% else %}0{% endif %}"
+                  {% if not puede_editar_proceso %}disabled{% endif %}
+                >
+                  {{ estado_icono }}
+                </button>
+              {% endwith %}
+            {% else %}
+              {% with estado_label="Pendiente" estado_clase="pending" estado_icono=paso.numero %}
+                <button
+                  type="button"
+                  class="timeline-step {{ estado_clase }}"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modalPaso"
+                  data-tooltip="true"
+                  title="Paso {{ paso.numero }}&#10;{{ paso.titulo }}&#10;{% if paso.duracion_referencia %}Duración: {{ paso.duracion_referencia }}&#10;{% endif %}Estado: {{ estado_label }}"
+                  data-step-id="{{ paso.id }}"
+                  data-step-numero="{{ paso.numero }}"
+                  data-step-estado="{{ estado_label }}"
+                  data-paso-id="{{ paso.id }}"
+                  data-paso-titulo="{{ paso.titulo }}"
+                  data-paso-numero="{{ paso.numero }}"
+                  data-paso-nota="{{ estado.nota|default_if_none:'' }}"
+                  data-paso-completado="{% if estado and estado.completado %}1{% else %}0{% endif %}"
+                  {% if not puede_editar_proceso %}disabled{% endif %}
+                >
+                  {{ estado_icono }}
+                </button>
+              {% endwith %}
+            {% endif %}
           {% endwith %}
         {% empty %}
           <div class="text-muted">No hay pasos configurados para este tipo.</div>
@@ -61,6 +103,55 @@
     {% endif %}
   </div>
 </div>
+
+<style>
+  .timeline-container {
+    justify-content: center;
+  }
+
+  .timeline-step {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    position: relative;
+    transition: all .2s;
+    padding: 0;
+  }
+
+  .timeline-step:hover {
+    transform: scale(1.1);
+  }
+
+  .timeline-step.completed {
+    background: #198754;
+    color: #fff;
+    border: 2px solid #146c43;
+  }
+
+  .timeline-step.current {
+    background: #0d6efd;
+    color: #fff;
+    border: 3px solid #000;
+  }
+
+  .timeline-step.pending {
+    background: #dee2e6;
+    color: #212529;
+    border: 2px solid #adb5bd;
+  }
+
+  .timeline-step.inactive {
+    background: #fff;
+    border: 2px dashed #adb5bd;
+    color: #6c757d;
+  }
+</style>
 
 {% if es_admin_proceso %}
 <div class="modal fade" id="modalAsignarAnalista" tabindex="-1" aria-hidden="true">
@@ -269,5 +360,20 @@
       })
       .catch(() => alert('No fue posible actualizar el paso.'));
     });
+  }
+
+  const initTooltips = () => {
+    if (typeof bootstrap !== 'undefined') {
+      const tooltipTriggerList = [].slice.call(
+        document.querySelectorAll('[data-tooltip="true"]')
+      );
+      tooltipTriggerList.map((el) => new bootstrap.Tooltip(el));
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTooltips);
+  } else {
+    initTooltips();
   }
 </script>
