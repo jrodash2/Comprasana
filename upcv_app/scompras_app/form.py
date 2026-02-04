@@ -19,6 +19,9 @@ from .models import (
     PresupuestoRenglon,
     PresupuestoAnual,
     TransferenciaPresupuestaria,
+    TipoProcesoCompra,
+    SubtipoProcesoCompra,
+    ProcesoCompraPaso,
 )
 
 from django.db.models import Sum, F, Value
@@ -199,6 +202,69 @@ class UserEditForm(forms.ModelForm):
             perfil.save()
 
         return user
+
+
+class TipoProcesoCompraForm(forms.ModelForm):
+    class Meta:
+        model = TipoProcesoCompra
+        fields = ["nombre", "codigo", "activo"]
+        widgets = {
+            "nombre": forms.TextInput(attrs={"class": "form-control"}),
+            "codigo": forms.TextInput(attrs={"class": "form-control"}),
+            "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+
+class SubtipoProcesoCompraForm(forms.ModelForm):
+    class Meta:
+        model = SubtipoProcesoCompra
+        fields = ["tipo", "nombre", "codigo", "activo"]
+        widgets = {
+            "tipo": forms.Select(attrs={"class": "form-select"}),
+            "nombre": forms.TextInput(attrs={"class": "form-control"}),
+            "codigo": forms.TextInput(attrs={"class": "form-control"}),
+            "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+
+class ProcesoCompraPasoForm(forms.ModelForm):
+    class Meta:
+        model = ProcesoCompraPaso
+        fields = ["tipo", "subtipo", "numero", "titulo", "duracion_referencia", "activo"]
+        widgets = {
+            "tipo": forms.Select(attrs={"class": "form-select"}),
+            "subtipo": forms.Select(attrs={"class": "form-select"}),
+            "numero": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
+            "titulo": forms.TextInput(attrs={"class": "form-control"}),
+            "duracion_referencia": forms.TextInput(attrs={"class": "form-control"}),
+            "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+    def __init__(self, *args, tipo=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if tipo:
+            self.fields["tipo"].initial = tipo
+            self.fields["tipo"].widget = forms.HiddenInput()
+            self.fields["subtipo"].queryset = SubtipoProcesoCompra.objects.filter(tipo=tipo)
+
+    def clean_numero(self):
+        numero = self.cleaned_data.get("numero")
+        if numero is None or numero < 1:
+            raise ValidationError("El número de paso debe ser mayor o igual a 1.")
+        return numero
+
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo = cleaned_data.get("tipo")
+        subtipo = cleaned_data.get("subtipo")
+        numero = cleaned_data.get("numero")
+        if tipo and numero:
+            qs = ProcesoCompraPaso.objects.filter(tipo=tipo, subtipo=subtipo, numero=numero)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError("Ya existe un paso con este número para el tipo/subtipo seleccionado.")
+        return cleaned_data
 
 
 

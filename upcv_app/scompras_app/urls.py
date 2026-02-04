@@ -61,6 +61,10 @@ urlpatterns = [
     path('ajax/cargar-secciones/', views.ajax_cargar_secciones, name='ajax_cargar_secciones'),
     path('ajax/cargar_subproductos/', views.ajax_cargar_subproductos, name='ajax_cargar_subproductos'),
     path('solicitud/<int:pk>/',views.SolicitudCompraDetailView.as_view(), name='detalle_solicitud'),
+    path('solicitud/<int:solicitud_id>/asignar-analista/', views.asignar_analista_solicitud, name='asignar_analista_solicitud'),
+    path('solicitud/<int:solicitud_id>/asignar-tipo-proceso/', views.asignar_tipo_proceso_solicitud, name='asignar_tipo_proceso_solicitud'),
+    path('solicitud/<int:solicitud_id>/pasos/<int:paso_id>/toggle/', views.toggle_paso_solicitud, name='toggle_paso_solicitud'),
+    path('solicitud/<int:solicitud_id>/set-paso-actual/', views.set_paso_actual_solicitud, name='set_paso_actual_solicitud'),
     path('solicitud/<int:solicitud_id>/cdp/nuevo/', views.crear_cdp_solicitud, name='crear_cdp_solicitud'),
     path('cdp/<int:cdp_id>/ejecutar/', views.ejecutar_cdp, name='ejecutar_cdp'),
     path('cdp/<int:cdp_id>/liberar/', views.liberar_cdp, name='liberar_cdp'),
@@ -93,6 +97,15 @@ urlpatterns = [
     path('rechazar_solicitud/', views.rechazar_solicitud, name='rechazar_solicitud'),
     path('solicitud/<int:solicitud_id>/generar_pdf/', views.generar_pdf_solicitud, name='generar_pdf_solicitud'),
     path('agregar-servicio-solicitud/', views.agregar_servicio_solicitud, name='agregar_servicio_solicitud'),
+    path('analista/dashboard/', views.analista_dashboard, name='analista_dashboard'),
+    path('analista/bandeja/', views.analista_bandeja, name='analista_bandeja'),
+    path('tipos-proceso/', views.tipos_proceso, name='tipos_proceso'),
+    path('tipos-proceso/crear/', views.crear_tipo_proceso, name='crear_tipo_proceso'),
+    path('tipos-proceso/<int:tipo_id>/editar/', views.editar_tipo_proceso, name='editar_tipo_proceso'),
+    path('tipos-proceso/<int:tipo_id>/pasos/', views.pasos_tipo_proceso, name='pasos_tipo_proceso'),
+    path('tipos-proceso/<int:tipo_id>/pasos/crear/', views.crear_paso_proceso, name='crear_paso_proceso'),
+    path('pasos/<int:paso_id>/editar/', views.editar_paso_proceso, name='editar_paso_proceso'),
+    path('subtipos/crear/', views.crear_subtipo_proceso, name='crear_subtipo_proceso'),
 
 
 
