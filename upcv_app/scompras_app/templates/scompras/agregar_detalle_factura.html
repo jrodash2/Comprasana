@@ -80,15 +80,7 @@ table.order-details th {
   <div class="page-body">
     <!-- Container-fluid starts -->
     
-                 {% if messages %}
-                <div class="container mt-3">
-                  {% for message in messages %}
-                  <div class="alert alert-info dark" role="alert">
-                    <p>{{ message }}</p>
-                  </div>
-                  {% endfor %}  
-                </div>
-                {% endif %} 
+                  
     <div class="container-fluid">
       <table class="table-wrapper invoice-1">
         <tbody>
@@ -395,8 +387,8 @@ table.order-details th {
   </div>
 
 <!-- Modal para seleccionar artículo con imagen de fondo -->
-<div class="modal fade" id="detalleFacturaModal" tabindex="-1" aria-labelledby="detalleFacturaModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+<div class="modal fade riho-modal" id="detalleFacturaModal" tabindex="-1" aria-labelledby="detalleFacturaModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
 
@@ -672,7 +664,7 @@ document.querySelectorAll('.seleccionar-articulo').forEach(button => {
 </script>
 
 <!-- Modal para Crear Nuevo Artículo con imagen de fondo -->
-<div class="modal fade" id="crearArticuloModal" tabindex="-1" aria-labelledby="crearArticuloModalLabel" aria-hidden="true">
+<div class="modal fade riho-modal" id="crearArticuloModal" tabindex="-1" aria-labelledby="crearArticuloModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
@@ -761,7 +753,7 @@ document.querySelectorAll('.seleccionar-articulo').forEach(button => {
 
 
 <!-- Modal para Editar Detalle -->
-<div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel" aria-hidden="true">
+<div class="modal fade riho-modal" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
@@ -907,7 +899,7 @@ function toggleFechaVencimiento() {
 
 
 <!-- Modal de Confirmación con imagen y estilo -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+<div class="modal fade riho-modal" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
@@ -933,13 +925,13 @@ function toggleFechaVencimiento() {
           </div>
 
           <!-- Mensaje de Confirmación -->
-          <div class="modal-body text-center">
+          <div class="modal-body text-center social-profile text-start p-4">
             <p>¿Estás seguro de que deseas eliminar este detalle?</p>
           </div>
 
           <!-- Botones de Confirmación -->
-          <div class="modal-footer justify-content-center">
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+          <div class="modal-footer justify-content-center border-top-0 mt-4">
+            <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
             <button type="button" class="btn btn-primary" id="confirmDeleteButton">Eliminar</button>
           </div>
         </div>
@@ -979,8 +971,14 @@ function toggleFechaVencimiento() {
         location.reload();
       },
       error: function(error) {
-        // Si hay un error, puedes mostrar un mensaje (opcional)
-        alert('Hubo un error al crear el artículo. Intenta nuevamente.');
+        if (window.showAppModal) {
+          window.showAppModal({
+            title: 'Error',
+            message: 'Hubo un error al crear el artículo. Intenta nuevamente.',
+            type: 'error',
+            autoclose: false,
+          });
+        }
       }
     });
   });
@@ -1011,13 +1009,25 @@ function toggleFechaVencimiento() {
         .then((response) => {
           if (response.ok) {
             location.reload(); // Recargar la página si se elimina correctamente
-          } else {
-            alert('Hubo un error al eliminar el detalle.');
+          } else if (window.showAppModal) {
+            window.showAppModal({
+              title: 'Error',
+              message: 'Hubo un error al eliminar el detalle.',
+              type: 'error',
+              autoclose: false,
+            });
           }
         })
         .catch((error) => {
           console.error('Error:', error);
-          alert('Hubo un error al procesar la solicitud.');
+          if (window.showAppModal) {
+            window.showAppModal({
+              title: 'Error',
+              message: 'Hubo un error al procesar la solicitud.',
+              type: 'error',
+              autoclose: false,
+            });
+          }
         })
         .finally(() => {
           confirmDeleteModal.hide(); // Ocultar el modal

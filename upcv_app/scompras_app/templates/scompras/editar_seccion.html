@@ -41,14 +41,7 @@
           <div class="card">
             <div class="card-body">
               <!-- Mensajes -->
-              {% if messages %}
-              <ul>
-                {% for message in messages %}
-                <li class="message">{{ message }}</li>
-                {% endfor %}
-              </ul>
-              {% endif %}
-
+              
               {% if form.errors %}
               <div class="alert alert-danger">
                 <ul>
@@ -120,7 +113,7 @@
 
                 <br>
                 <div class="form-footer text-end">
-                  <button class="btn btn-primary" type="submit">
+                  <button class="btn btn-primary px-4" type="submit">
                     {% if form.instance.pk %}Actualizar Sección{% else %}Crear Sección{% endif %}
                   </button>
                 </div>

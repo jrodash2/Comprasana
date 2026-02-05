@@ -41,14 +41,7 @@
             </div>
             <div class="card-body">
               <!-- Mostramos los mensajes de éxito o error si existen -->
-              {% if messages %}
-              <ul>
-                {% for message in messages %}
-                <li class="message">{{ message }}</li>
-                {% endfor %}
-              </ul>
-              {% endif %}
-              {% if form.errors %}
+                            {% if form.errors %}
               <div class="alert alert-danger">
                 <ul>
                   {% for field, errors in form.errors.items %}
@@ -98,7 +91,7 @@
                 
                 <br>
                 <div class="form-footer text-end">
-                  <button class="btn btn-primary" type="submit">
+                  <button class="btn btn-primary px-4" type="submit">
                     {% if form.instance.pk %}Actualizar Departamento{% else %}Crear Departamento{% endif %}
                   </button>
                 </div>

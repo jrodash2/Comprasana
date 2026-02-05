@@ -1,0 +1,154 @@
+.riho-modal .modal-content {
+  border-radius: 14px;
+  overflow: hidden;
+  border: none;
+}
+
+.riho-modal .modal-header {
+  background-image: url('/static/assets/images/other-images/boxbg.jpg');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  position: relative;
+  border-bottom: 0;
+}
+
+.riho-modal .modal-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.riho-modal .modal-body {
+  position: relative;
+  background: #fff;
+}
+
+.riho-modal .riho-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/static/assets/images/other-images/boxbg.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+.riho-modal .riho-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.55));
+}
+
+.riho-modal .riho-content {
+  position: relative;
+  z-index: 2;
+}
+
+.riho-modal .modal-title,
+.riho-modal .btn-close {
+  position: relative;
+  z-index: 2;
+}
+
+.riho-modal .btn-close {
+  filter: invert(1) brightness(1.1);
+}
+
+.btn-upcv-primary {
+  background: #0068ab;
+  border-color: #0068ab;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 10px 18px;
+}
+
+.btn-upcv-primary:hover,
+.btn-upcv-primary:focus {
+  filter: brightness(0.95);
+  color: #fff;
+}
+
+.btn-upcv-outline {
+  border: 1px solid #0068ab;
+  color: #0068ab;
+  font-weight: 700;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 18px;
+}
+
+.btn-upcv-outline:hover,
+.btn-upcv-outline:focus {
+  background: #eaf3fa;
+  color: #0068ab;
+}
+
+.riho-modal .btn-primary {
+  background: #0068ab;
+  border-color: #0068ab;
+  font-weight: 600;
+}
+
+.riho-modal .btn-outline-secondary,
+.riho-modal .btn-secondary {
+  border: 1px solid #0068ab;
+  color: #0068ab;
+  font-weight: 600;
+  background: #fff;
+}
+
+.riho-modal .btn-outline-secondary:hover,
+.riho-modal .btn-secondary:hover {
+  background: #eaf3fa;
+  color: #0068ab;
+}
+
+.riho-modal .modal-footer {
+  border-top: 0;
+}
+
+.riho-modal .modal-title {
+  font-weight: 800;
+  color: #111827;
+}
+
+.riho-modal .modal-subtitle {
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.riho-modal .form-label {
+  font-weight: 700;
+  color: #111827;
+}
+
+.riho-modal .form-control {
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.riho-modal .riho-modal-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+}
+
+.riho-modal .riho-modal-message {
+  font-size: 0.95rem;
+}
+
+.riho-modal .riho-modal-errors {
+  background: rgba(255, 0, 0, 0.06);
+  border: 1px solid rgba(255, 0, 0, 0.15);
+  color: #b42318;
+  border-radius: 8px;
+  padding: 0.75rem;
+}

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
+import logging
 from django.utils.timezone import localtime
 from django.utils import timezone
-from venv import logger
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.forms import IntegerField
@@ -102,6 +102,10 @@ from .services.presupuesto_import import import_rows, read_rows
 from django.views.decorators.http import require_GET
 from django.db.models.functions import Coalesce
 from django.db import transaction, IntegrityError
+try:
+    from django.db.models.deletion import ProtectedError
+except ImportError:  # pragma: no cover - fallback for older Django
+    ProtectedError = Exception
 from django.db.models import Sum
 from django.shortcuts import render
 from django.template.loader import render_to_string
@@ -135,6 +139,12 @@ from xhtml2pdf import pisa
 from io import BytesIO
 from django.contrib.auth.backends import ModelBackend
 from django.db import connections
+
+logger = logging.getLogger(__name__)
+
+
+def _json_form_errors(form):
+    return {field: [str(error) for error in errors] for field, errors in form.errors.items()}
 
 
 class TicketsAuthBackend(ModelBackend):
@@ -1086,15 +1096,25 @@ def crear_subtipo_proceso(request):
 
 
 @login_required
-def pasos_tipo_proceso(request, tipo_id):
+def pasos_tipo_proceso(request, tipo_id, subtipo_id=None):
     if not is_admin(request.user):
         return render(request, 'scompras/403.html', status=403)
     tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
-    pasos = ProcesoCompraPaso.objects.filter(tipo=tipo).select_related("subtipo").order_by("numero")
+    subtipo = None
+    pasos_qs = ProcesoCompraPaso.objects.filter(tipo_id=tipo_id)
+    if subtipo_id:
+        subtipo = get_object_or_404(SubtipoProcesoCompra, pk=subtipo_id, tipo_id=tipo_id)
+        pasos_qs = pasos_qs.filter(subtipo_id=subtipo_id)
+    else:
+        pasos_qs = pasos_qs.filter(subtipo__isnull=True)
+    pasos = pasos_qs.select_related("subtipo").order_by("numero")
+    if settings.DEBUG:
+        logger.info("Pasos tipo=%s subtipo=%s total=%s", tipo_id, subtipo_id, pasos.count())
     context = {
         "tipo": tipo,
+        "subtipo": subtipo,
         "pasos": pasos,
-        "paso_form": ProcesoCompraPasoForm(tipo=tipo),
+        "paso_form": ProcesoCompraPasoForm(tipo=tipo, subtipo=subtipo),
         "subtipos": SubtipoProcesoCompra.objects.filter(tipo=tipo).order_by("nombre"),
     }
     return render(request, "scompras/procesos/pasos_tipo_proceso.html", context)
@@ -1124,6 +1144,304 @@ def editar_paso_proceso(request, paso_id):
         form.save()
         return JsonResponse({"success": True})
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
+
+
+@login_required
+@admin_only_config
+def tipos_proceso_list(request):
+    tipos = (
+        TipoProcesoCompra.objects.annotate(
+            subtipos_count=Count("subtipos", distinct=True),
+            pasos_count=Count("pasos", distinct=True),
+        )
+        .order_by("nombre")
+    )
+    context = {
+        "tipos": tipos,
+        "tipo_form": TipoProcesoCompraForm(),
+    }
+    return render(request, "scompras/procesos/tipos_list.html", context)
+
+
+@login_required
+@admin_only_config
+def subtipos_proceso_list(request, tipo_id):
+    tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
+    subtipos = SubtipoProcesoCompra.objects.filter(tipo=tipo).order_by("nombre")
+    context = {
+        "tipo": tipo,
+        "subtipos": subtipos,
+        "subtipo_form": SubtipoProcesoCompraForm(tipo=tipo),
+    }
+    return render(request, "scompras/procesos/subtipos_list.html", context)
+
+
+@login_required
+@admin_only_config
+def pasos_tipo_list(request, tipo_id):
+    tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
+    pasos = ProcesoCompraPaso.objects.filter(tipo=tipo, subtipo__isnull=True).order_by("numero")
+    context = {
+        "tipo": tipo,
+        "subtipo": None,
+        "pasos": pasos,
+        "paso_form": ProcesoCompraPasoForm(tipo=tipo),
+    }
+    return render(request, "scompras/procesos/pasos_list.html", context)
+
+
+@login_required
+@admin_only_config
+def pasos_subtipo_list(request, tipo_id, subtipo_id):
+    tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
+    subtipo = get_object_or_404(SubtipoProcesoCompra, pk=subtipo_id, tipo=tipo)
+    pasos = ProcesoCompraPaso.objects.filter(tipo=tipo, subtipo=subtipo).order_by("numero")
+    context = {
+        "tipo": tipo,
+        "subtipo": subtipo,
+        "pasos": pasos,
+        "paso_form": ProcesoCompraPasoForm(tipo=tipo, subtipo=subtipo),
+    }
+    return render(request, "scompras/procesos/pasos_list.html", context)
+
+
+@login_required
+@admin_only_config
+@require_POST
+def tipo_proceso_create(request):
+    form = TipoProcesoCompraForm(request.POST)
+    if form.is_valid():
+        tipo = form.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "id": tipo.id,
+                "nombre": tipo.nombre,
+                "codigo": tipo.codigo,
+                "activo": tipo.activo,
+                "message": "Guardado",
+            }
+        )
+    return JsonResponse({"success": False, "errors": _json_form_errors(form)}, status=400)
+
+
+@login_required
+@admin_only_config
+@require_POST
+def tipo_proceso_update(request, tipo_id):
+    tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
+    form = TipoProcesoCompraForm(request.POST, instance=tipo)
+    if form.is_valid():
+        tipo = form.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "id": tipo.id,
+                "nombre": tipo.nombre,
+                "codigo": tipo.codigo,
+                "activo": tipo.activo,
+                "message": "Guardado",
+            }
+        )
+    return JsonResponse({"success": False, "errors": _json_form_errors(form)}, status=400)
+
+
+@login_required
+@admin_only_config
+@require_POST
+def tipo_proceso_toggle(request, tipo_id):
+    tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
+    tipo.activo = not tipo.activo
+    tipo.save(update_fields=["activo"])
+    return JsonResponse({"success": True, "activo": tipo.activo, "message": "Actualizado"})
+
+
+@login_required
+@admin_only_config
+@require_POST
+def subtipo_proceso_create(request, tipo_id):
+    tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
+    form = SubtipoProcesoCompraForm(request.POST, tipo=tipo)
+    if form.is_valid():
+        subtipo = form.save(commit=False)
+        subtipo.tipo = tipo
+        subtipo.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "id": subtipo.id,
+                "nombre": subtipo.nombre,
+                "codigo": subtipo.codigo,
+                "activo": subtipo.activo,
+                "message": "Guardado",
+            }
+        )
+    return JsonResponse({"success": False, "errors": _json_form_errors(form)}, status=400)
+
+
+@login_required
+@admin_only_config
+@require_POST
+def subtipo_proceso_update(request, subtipo_id):
+    subtipo = get_object_or_404(SubtipoProcesoCompra, pk=subtipo_id)
+    form = SubtipoProcesoCompraForm(request.POST, instance=subtipo, tipo=subtipo.tipo)
+    if form.is_valid():
+        subtipo = form.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "id": subtipo.id,
+                "nombre": subtipo.nombre,
+                "codigo": subtipo.codigo,
+                "activo": subtipo.activo,
+                "message": "Guardado",
+            }
+        )
+    return JsonResponse({"success": False, "errors": _json_form_errors(form)}, status=400)
+
+
+@login_required
+@admin_only_config
+@require_POST
+def subtipo_proceso_toggle(request, subtipo_id):
+    subtipo = get_object_or_404(SubtipoProcesoCompra, pk=subtipo_id)
+    subtipo.activo = not subtipo.activo
+    subtipo.save(update_fields=["activo"])
+    return JsonResponse({"success": True, "activo": subtipo.activo, "message": "Actualizado"})
+
+
+@login_required
+@admin_only_config
+@require_POST
+def paso_create_tipo(request, tipo_id):
+    tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
+    form = ProcesoCompraPasoForm(request.POST, tipo=tipo)
+    if form.is_valid():
+        paso = form.save(commit=False)
+        paso.tipo = tipo
+        paso.subtipo = None
+        paso.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "id": paso.id,
+                "titulo": paso.titulo,
+                "activo": paso.activo,
+                "message": "Guardado",
+            }
+        )
+    return JsonResponse({"success": False, "errors": _json_form_errors(form)}, status=400)
+
+
+@login_required
+@admin_only_config
+@require_POST
+def paso_create_subtipo(request, subtipo_id):
+    subtipo = get_object_or_404(SubtipoProcesoCompra, pk=subtipo_id)
+    tipo = subtipo.tipo
+    form = ProcesoCompraPasoForm(request.POST, tipo=tipo, subtipo=subtipo)
+    if form.is_valid():
+        paso = form.save(commit=False)
+        paso.tipo = tipo
+        paso.subtipo = subtipo
+        paso.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "id": paso.id,
+                "titulo": paso.titulo,
+                "activo": paso.activo,
+                "message": "Guardado",
+            }
+        )
+    return JsonResponse({"success": False, "errors": _json_form_errors(form)}, status=400)
+
+
+@login_required
+@admin_only_config
+@require_POST
+def paso_update(request, paso_id):
+    paso = get_object_or_404(ProcesoCompraPaso, pk=paso_id)
+    form = ProcesoCompraPasoForm(
+        request.POST,
+        instance=paso,
+        tipo=paso.tipo,
+        subtipo=paso.subtipo,
+    )
+    if form.is_valid():
+        paso = form.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "id": paso.id,
+                "titulo": paso.titulo,
+                "activo": paso.activo,
+                "message": "Guardado",
+            }
+        )
+    return JsonResponse({"success": False, "errors": _json_form_errors(form)}, status=400)
+
+
+@login_required
+@admin_only_config
+@require_POST
+def paso_toggle(request, paso_id):
+    paso = get_object_or_404(ProcesoCompraPaso, pk=paso_id)
+    paso.activo = not paso.activo
+    paso.save(update_fields=["activo"])
+    return JsonResponse({"success": True, "activo": paso.activo, "message": "Actualizado"})
+
+
+@login_required
+@admin_only_config
+@require_POST
+def tipo_proceso_eliminar(request, tipo_id):
+    tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
+    try:
+        tipo.delete()
+        messages.success(request, "Tipo de proceso eliminado correctamente.")
+    except (ProtectedError, IntegrityError):
+        messages.error(
+            request,
+            "No se puede eliminar porque está en uso. Puede desactivarlo en su lugar.",
+        )
+    return redirect("scompras:tipos_proceso_list")
+
+
+@login_required
+@admin_only_config
+@require_POST
+def subtipo_proceso_eliminar(request, tipo_id, subtipo_id):
+    subtipo = get_object_or_404(SubtipoProcesoCompra, pk=subtipo_id, tipo_id=tipo_id)
+    try:
+        subtipo.delete()
+        messages.success(request, "Subtipo eliminado correctamente.")
+    except (ProtectedError, IntegrityError):
+        messages.error(
+            request,
+            "No se puede eliminar porque está en uso. Puede desactivarlo en su lugar.",
+        )
+    return redirect("scompras:subtipos_proceso_list", tipo_id=tipo_id)
+
+
+@login_required
+@admin_only_config
+@require_POST
+def paso_proceso_eliminar(request, paso_id):
+    paso = get_object_or_404(ProcesoCompraPaso, pk=paso_id)
+    tipo_id = paso.tipo_id
+    subtipo_id = paso.subtipo_id
+    try:
+        paso.delete()
+        messages.success(request, "Paso eliminado correctamente.")
+    except (ProtectedError, IntegrityError):
+        messages.error(
+            request,
+            "No se puede eliminar porque está en uso. Puede desactivarlo en su lugar.",
+        )
+    if subtipo_id:
+        return redirect("scompras:pasos_subtipo_list", tipo_id=tipo_id, subtipo_id=subtipo_id)
+    return redirect("scompras:pasos_tipo_list", tipo_id=tipo_id)
 
 
 @login_required

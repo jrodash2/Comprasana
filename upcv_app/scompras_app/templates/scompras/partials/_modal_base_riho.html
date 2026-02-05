@@ -1,0 +1,28 @@
+<div class="modal fade riho-modal" id="{{ modal_id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content dark-sign-up">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ title }}</h5>
+        <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Cerrar" style="background-color:#0068ab; color:white;"></button>
+      </div>
+      <div class="modal-body social-profile text-start p-4">
+        {{ body_html|safe }}
+      </div>
+      {% if show_footer|default:True %}
+      <div class="modal-footer justify-content-center border-top-0 mt-4">
+        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">
+          {{ cancel_text|default:"Cancelar" }}
+        </button>
+        {% if form_action %}
+          <form method="{{ method|default:"post" }}" action="{{ form_action }}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary px-4">{{ confirm_text|default:"Confirmar" }}</button>
+          </form>
+        {% else %}
+          <button type="button" class="btn btn-primary px-4">{{ confirm_text|default:"Confirmar" }}</button>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

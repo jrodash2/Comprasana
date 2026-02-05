@@ -6,7 +6,14 @@
     <div class="page-title">
       <div class="row align-items-center">
         <div class="col-8">
-          <h2 class="mb-0">Pasos del proceso: {{ tipo.nombre }}</h2>
+          <h2 class="mb-0">
+            Pasos del proceso:
+            {% if subtipo %}
+              {{ tipo.nombre }} / Subtipo: {{ subtipo.nombre }}
+            {% else %}
+              {{ tipo.nombre }}
+            {% endif %}
+          </h2>
           <p class="text-muted mb-0">Gestiona el catálogo de pasos por tipo y subtipo.</p>
         </div>
         <div class="col-4 text-end">
@@ -67,14 +74,14 @@
   </div>
 </div>
 
-<div class="modal fade" id="modalCrearPaso" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
+<div class="modal fade riho-modal" id="modalCrearPaso" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content dark-sign-up">
       <div class="modal-header">
         <h5 class="modal-title">Crear paso</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Cerrar" style="background-color:#0068ab; color:white;"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body social-profile text-start p-4">
         <form id="formCrearPaso" data-url="{% url 'scompras:crear_paso_proceso' tipo.id %}">
           {% csrf_token %}
           {{ paso_form.tipo }}
@@ -100,22 +107,22 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formCrearPaso" class="btn btn-primary">Guardar</button>
+      <div class="modal-footer justify-content-center border-top-0 mt-4">
+        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
+        <button type="submit" form="formCrearPaso" class="btn btn-primary px-4">Guardar</button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="modalEditarPaso" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
+<div class="modal fade riho-modal" id="modalEditarPaso" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content dark-sign-up">
       <div class="modal-header">
         <h5 class="modal-title">Editar paso</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Cerrar" style="background-color:#0068ab; color:white;"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body social-profile text-start p-4">
         <form id="formEditarPaso">
           {% csrf_token %}
           <input type="hidden" name="tipo" value="{{ tipo.id }}">
@@ -146,9 +153,9 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formEditarPaso" class="btn btn-primary">Guardar</button>
+      <div class="modal-footer justify-content-center border-top-0 mt-4">
+        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
+        <button type="submit" form="formEditarPaso" class="btn btn-primary px-4">Guardar</button>
       </div>
     </div>
   </div>
@@ -175,11 +182,25 @@
     .then(data => {
       if (data.success) {
         window.location.reload();
-      } else {
-        alert('No fue posible guardar los cambios.');
+      } else if (window.showAppModal) {
+        window.showAppModal({
+          title: 'Error',
+          message: 'No fue posible guardar los cambios.',
+          type: 'error',
+          autoclose: false,
+        });
       }
     })
-    .catch(() => alert('No fue posible guardar los cambios.'));
+    .catch(() => {
+      if (window.showAppModal) {
+        window.showAppModal({
+          title: 'Error',
+          message: 'No fue posible guardar los cambios.',
+          type: 'error',
+          autoclose: false,
+        });
+      }
+    });
   };
 
   const formCrearPaso = document.getElementById('formCrearPaso');

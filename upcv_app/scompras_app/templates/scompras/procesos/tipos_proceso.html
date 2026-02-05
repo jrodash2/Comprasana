@@ -69,14 +69,14 @@
   </div>
 </div>
 
-<div class="modal fade" id="modalCrearTipo" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
+<div class="modal fade riho-modal" id="modalCrearTipo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content dark-sign-up">
       <div class="modal-header">
         <h5 class="modal-title">Crear tipo de proceso</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Cerrar" style="background-color:#0068ab; color:white;"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body social-profile text-start p-4">
         <form id="formCrearTipo" data-url="{% url 'scompras:crear_tipo_proceso' %}">
           {% csrf_token %}
           <div class="mb-3">
@@ -93,22 +93,22 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formCrearTipo" class="btn btn-primary">Guardar</button>
+      <div class="modal-footer justify-content-center border-top-0 mt-4">
+        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
+        <button type="submit" form="formCrearTipo" class="btn btn-upcv-primary">Guardar</button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="modalEditarTipo" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
+<div class="modal fade riho-modal" id="modalEditarTipo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content dark-sign-up">
       <div class="modal-header">
         <h5 class="modal-title">Editar tipo de proceso</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Cerrar" style="background-color:#0068ab; color:white;"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body social-profile text-start p-4">
         <form id="formEditarTipo">
           {% csrf_token %}
           <div class="mb-3">
@@ -125,22 +125,22 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formEditarTipo" class="btn btn-primary">Guardar</button>
+      <div class="modal-footer justify-content-center border-top-0 mt-4">
+        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
+        <button type="submit" form="formEditarTipo" class="btn btn-upcv-primary">Guardar</button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="modalCrearSubtipo" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
+<div class="modal fade riho-modal" id="modalCrearSubtipo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content dark-sign-up">
       <div class="modal-header">
         <h5 class="modal-title">Crear subtipo</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Cerrar" style="background-color:#0068ab; color:white;"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body social-profile text-start p-4">
         <form id="formCrearSubtipo" data-url="{% url 'scompras:crear_subtipo_proceso' %}">
           {% csrf_token %}
           <div class="mb-3">
@@ -161,9 +161,9 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formCrearSubtipo" class="btn btn-primary">Guardar</button>
+      <div class="modal-footer justify-content-center border-top-0 mt-4">
+        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
+        <button type="submit" form="formCrearSubtipo" class="btn btn-upcv-primary">Guardar</button>
       </div>
     </div>
   </div>
@@ -190,11 +190,25 @@
     .then(data => {
       if (data.success) {
         window.location.reload();
-      } else {
-        alert('No fue posible guardar los cambios.');
+      } else if (window.showAppModal) {
+        window.showAppModal({
+          title: 'Error',
+          message: 'No fue posible guardar los cambios.',
+          type: 'error',
+          autoclose: false,
+        });
       }
     })
-    .catch(() => alert('No fue posible guardar los cambios.'));
+    .catch(() => {
+      if (window.showAppModal) {
+        window.showAppModal({
+          title: 'Error',
+          message: 'No fue posible guardar los cambios.',
+          type: 'error',
+          autoclose: false,
+        });
+      }
+    });
   };
 
   const formCrearTipo = document.getElementById('formCrearTipo');

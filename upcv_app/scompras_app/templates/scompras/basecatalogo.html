@@ -57,6 +57,7 @@
 
 <!-- Responsive css-->
 <link rel="stylesheet" type="text/css" href="{% static 'assets/css/responsive.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'scompras/css/modal_riho.css' %}">
 </head>
   <body> 
 
@@ -330,6 +331,7 @@
           <li><a href="{% url 'scompras:importar_excel' %}">Importar Insumos</a></li>
           <li><a href="{% url 'scompras:user_create' %}">Usuarios</a></li>
           <li><a href="{% url 'scompras:editar_institucion' %}">Institución</a></li>
+          {% include "scompras/partials/_menu_tipos_proceso_admin.html" %}
           <li><a href="#">Manuales</a></li>
         </ul>
       </li>
@@ -443,6 +445,8 @@
 
 {# Permite a vistas específicas inyectar JS adicional (p. ej. dashboards con Chart.js) #}
 {% block extra_js %}{% endblock %}
+<script src="{% static 'scompras/js/ui_modals.js' %}"></script>
+{% include "scompras/partials/_alerts_modal_messages.html" %}
 
 <!-- Footer SIEMPRE va fuera de .page-body -->
   <footer class="footer">

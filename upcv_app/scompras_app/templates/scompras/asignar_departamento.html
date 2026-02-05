@@ -45,14 +45,7 @@
             <div class="card-body">
 
               <!-- Mostrar mensajes -->
-              {% if messages %}
-              <ul>
-                {% for message in messages %}
-                <li class="message">{{ message }}</li>
-                {% endfor %}
-              </ul>
-              {% endif %}
-
+              
               {% if form.errors %}
               <div class="alert alert-danger">
                 <ul>
@@ -87,7 +80,7 @@
     </div>
   </div>
   <div class="form-footer text-end mt-3">
-    <button class="btn btn-primary" type="submit">Asignar Departamento</button>
+    <button class="btn btn-primary px-4" type="submit">Asignar Departamento</button>
   </div>
 </form>
 
@@ -203,12 +196,12 @@
 
 <div class="blur-overlay"></div>
 
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade riho-modal" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content dark-sign-up">
       <form id="deleteForm" method="POST">
         {% csrf_token %}
-        <div class="modal-body social-profile">
+        <div class="modal-body social-profile text-start p-4">
           <div class="modal-toggle-wrapper">
             <div class="title-wrapper pb-3 modal-heading">
               <h5 class="theme-name mb-0"><span>Confirmar - </span>Eliminar Asignación</h5>
@@ -216,7 +209,7 @@
             </div>
             <div class="row justify-content-center mt-4">
               <div class="col-auto">
-                <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
               </div>
               <div class="col-auto">
                 <button type="submit" class="btn btn-primary w-100">Eliminar</button>

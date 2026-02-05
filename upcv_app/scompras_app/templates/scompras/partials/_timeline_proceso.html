@@ -314,14 +314,14 @@
 </style>
 
 {% if es_admin_proceso %}
-<div class="modal fade" id="modalAsignarAnalista" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
+<div class="modal fade riho-modal" id="modalAsignarAnalista" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content dark-sign-up">
       <div class="modal-header">
         <h5 class="modal-title">Asignar analista</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Cerrar" style="background-color:#0068ab; color:white;"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body social-profile text-start p-4">
         <form id="formAsignarAnalista" data-url="{% url 'scompras:asignar_analista_solicitud' solicitud.id %}">
           {% csrf_token %}
           <div class="mb-3">
@@ -337,22 +337,22 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <div class="modal-footer justify-content-center border-top-0 mt-4">
+        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
         <button type="submit" form="formAsignarAnalista" class="btn btn-primary">Guardar</button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="modalAsignarTipo" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
+<div class="modal fade riho-modal" id="modalAsignarTipo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content dark-sign-up">
       <div class="modal-header">
         <h5 class="modal-title">Asignar tipo de proceso</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Cerrar" style="background-color:#0068ab; color:white;"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body social-profile text-start p-4">
         <form id="formAsignarTipo" data-url="{% url 'scompras:asignar_tipo_proceso_solicitud' solicitud.id %}">
           {% csrf_token %}
           <div class="mb-3">
@@ -379,8 +379,8 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <div class="modal-footer justify-content-center border-top-0 mt-4">
+        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
         <button type="submit" form="formAsignarTipo" class="btn btn-primary">Guardar</button>
       </div>
     </div>
@@ -388,14 +388,14 @@
 </div>
 {% endif %}
 
-<div class="modal fade" id="modalPaso" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
+<div class="modal fade riho-modal" id="modalPaso" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content dark-sign-up">
       <div class="modal-header">
         <h5 class="modal-title" id="modalPasoTitulo">Actualizar paso</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Cerrar" style="background-color:#0068ab; color:white;"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body social-profile text-start p-4">
         <form id="formPaso" data-url-template="{% url 'scompras:toggle_paso_solicitud' solicitud.id 0 %}">
           {% csrf_token %}
           <input type="hidden" name="paso_id" id="pasoIdInput">
@@ -409,8 +409,8 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <div class="modal-footer justify-content-center border-top-0 mt-4">
+        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
         <button type="submit" form="formPaso" class="btn btn-primary">Guardar</button>
       </div>
     </div>
@@ -437,11 +437,25 @@
     .then(data => {
       if (data.success) {
         onSuccess();
-      } else {
-        alert('No fue posible guardar los cambios.');
+      } else if (window.showAppModal) {
+        window.showAppModal({
+          title: 'Error',
+          message: 'No fue posible guardar los cambios.',
+          type: 'error',
+          autoclose: false,
+        });
       }
     })
-    .catch(() => alert('No fue posible guardar los cambios.'));
+    .catch(() => {
+      if (window.showAppModal) {
+        window.showAppModal({
+          title: 'Error',
+          message: 'No fue posible guardar los cambios.',
+          type: 'error',
+          autoclose: false,
+        });
+      }
+    });
   };
 
   const asignarAnalistaForm = document.getElementById('formAsignarAnalista');
@@ -514,11 +528,25 @@
       .then(data => {
         if (data.success) {
           window.location.reload();
-        } else {
-          alert('No fue posible actualizar el paso.');
+        } else if (window.showAppModal) {
+          window.showAppModal({
+            title: 'Error',
+            message: 'No fue posible actualizar el paso.',
+            type: 'error',
+            autoclose: false,
+          });
         }
       })
-      .catch(() => alert('No fue posible actualizar el paso.'));
+      .catch(() => {
+        if (window.showAppModal) {
+          window.showAppModal({
+            title: 'Error',
+            message: 'No fue posible actualizar el paso.',
+            type: 'error',
+            autoclose: false,
+          });
+        }
+      });
     });
   }
 

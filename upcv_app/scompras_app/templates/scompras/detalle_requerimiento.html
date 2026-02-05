@@ -94,16 +94,7 @@ table.order-details th {
   <div class="page-body">
     <!-- Container-fluid starts -->
     
-    {% if messages %}
-      <div class="container mt-3">
-        {% for message in messages %}
-          <div class="alert alert-info dark" role="alert">
-            <p>{{ message }}</p>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-    
+        
     <div class="container-fluid">
       <table class="table-wrapper invoice-1" id="tabla-detalles-requerimiento">
         <tbody>
@@ -320,7 +311,7 @@ table.order-details th {
 </div>
 
 <!-- Modal de Anulación con nuevo formato -->
-<div class="modal fade" id="modalAnular" tabindex="-1" aria-labelledby="modalAnularLabel" aria-hidden="true">
+<div class="modal fade riho-modal" id="modalAnular" tabindex="-1" aria-labelledby="modalAnularLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
@@ -353,7 +344,7 @@ table.order-details th {
             <!-- Botones -->
             <div class="text-end">
               <button type="submit" class="btn btn-danger">Confirmar</button>
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
             </div>
           </form>
 
@@ -367,7 +358,7 @@ table.order-details th {
 
 <!-- Modal de Despacho -->
 <!-- Modal de Despacho con nuevo formato -->
-<div class="modal fade" id="modalDespachar" tabindex="-1" aria-labelledby="modalDespacharLabel" aria-hidden="true">
+<div class="modal fade riho-modal" id="modalDespachar" tabindex="-1" aria-labelledby="modalDespacharLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
@@ -428,7 +419,7 @@ table.order-details th {
             <!-- Botones -->
             <div class="text-end">
               <button type="submit" class="btn btn-primary">Confirmar Despacho</button>
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
             </div>
           </form>
 
@@ -439,8 +430,8 @@ table.order-details th {
 </div>
 
 <!-- Modal para Agregar Detalle (con estilo decorativo e imagen) -->
-<div class="modal fade" id="agregarDetalleModal" tabindex="-1" aria-labelledby="agregarDetalleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+<div class="modal fade riho-modal" id="agregarDetalleModal" tabindex="-1" aria-labelledby="agregarDetalleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
 
@@ -537,7 +528,14 @@ table.order-details th {
       const max = parseInt(cantidadInput.max);
       const val = parseInt(cantidadInput.value);
       if (val > max) {
-        alert("No puedes ingresar más de " + max + " unidades.");
+        if (window.showAppModal) {
+          window.showAppModal({
+            title: 'Advertencia',
+            message: `No puedes ingresar más de ${max} unidades.`,
+            type: 'warning',
+            autoclose: false,
+          });
+        }
         cantidadInput.value = max;
       }
     });
@@ -546,10 +544,10 @@ table.order-details th {
 
 
 <!-- Modal para Editar Detalle -->
-<div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+<div class="modal fade riho-modal" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content dark-sign-up">
-      <div class="modal-body p-4">
+      <div class="modal-body p-4 social-profile text-start">
 
         <div class="title-wrapper pb-3 modal-heading text-center">
           <h5 class="theme-name mb-0"><span>Editar - </span>Detalle de Requerimiento</h5>
@@ -580,7 +578,7 @@ table.order-details th {
           </div>
 
           <div class="text-end">
-            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            <button type="submit" class="btn btn-primary px-4">Guardar Cambios</button>
           </div>
         </form>
 
@@ -590,7 +588,7 @@ table.order-details th {
 </div> 
 
 <!-- Modal de Confirmación para eliminar detalle (actualizado con estilo e imagen) -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+<div class="modal fade riho-modal" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
@@ -621,9 +619,9 @@ table.order-details th {
           </div>
 
           <!-- Botones -->
-          <div class="modal-footer justify-content-center">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-danger" id="confirmDeleteButton">Eliminar</button>
+          <div class="modal-footer justify-content-center border-top-0 mt-4">
+            <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
+            <button type="button" class="btn btn-primary px-4" id="confirmDeleteButton">Eliminar</button>
           </div>
         </div>
 
@@ -655,7 +653,14 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => {
           console.error('Error al obtener datos del detalle:', error);
-          alert('No se pudo cargar la información del detalle.');
+          if (window.showAppModal) {
+            window.showAppModal({
+              title: 'Error',
+              message: 'No se pudo cargar la información del detalle.',
+              type: 'error',
+              autoclose: false,
+            });
+          }
         });
     });
   });
@@ -697,11 +702,25 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(response => {
         if (response.ok) {
           location.reload();
-        } else {
-          alert('Error al eliminar el detalle.');
+        } else if (window.showAppModal) {
+          window.showAppModal({
+            title: 'Error',
+            message: 'Error al eliminar el detalle.',
+            type: 'error',
+            autoclose: false,
+          });
         }
       })
-      .catch(() => alert('Error al procesar la solicitud.'))
+      .catch(() => {
+        if (window.showAppModal) {
+          window.showAppModal({
+            title: 'Error',
+            message: 'Error al procesar la solicitud.',
+            type: 'error',
+            autoclose: false,
+          });
+        }
+      })
       .finally(() => {
         confirmDeleteModal.hide();
       });
