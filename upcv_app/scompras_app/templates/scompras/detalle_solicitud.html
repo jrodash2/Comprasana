@@ -43,7 +43,7 @@
                 <tr>
                   <td style="padding: 30px 0px 30px 30px;">
                     <img src="{% static 'assets/images/logo/logo.png' %}" alt="logo">
-{% if mostrar_acciones_solicitud %}
+{% if mostrar_acciones_solicitud and not is_analista %}
 <!-- Botón Editar -->
 {% if puede_editar_solicitud_ui %}
 <button type="button" class="btn btn-light btn-sm"
@@ -74,7 +74,7 @@
 {% endif %}
 
 <!-- Botón Ver PDF (Solo cuando el estado es "Finalizada" o "Rechazada") -->
-{% if solicitud.estado == 'Finalizada' or solicitud.estado == 'Rechazada' %}
+{% if (solicitud.estado == 'Finalizada' or solicitud.estado == 'Rechazada') and not is_analista %}
   <!-- Botón Editar -->
 {% if puede_editar_solicitud_ui %}
 <button type="button" class="btn btn-light btn-sm"
