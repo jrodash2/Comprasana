@@ -72,6 +72,13 @@
                       >
                         {% if subtipo.activo %}Desactivar{% else %}Activar{% endif %}
                       </button>
+                      <button
+                        class="btn btn-danger btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalEliminarSubtipo{{ subtipo.id }}"
+                      >
+                        Eliminar
+                      </button>
                     </td>
                   </tr>
                   {% empty %}
@@ -84,6 +91,28 @@
             </div>
           </div>
         </div>
+        {% for subtipo in subtipos %}
+        <div class="modal fade" id="modalEliminarSubtipo{{ subtipo.id }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Eliminar subtipo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+              </div>
+              <div class="modal-body">
+                <p class="mb-0">¿Seguro que desea eliminar <strong>{{ subtipo.nombre }}</strong>? Esta acción no se puede deshacer.</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'scompras:subtipo_proceso_eliminar' tipo.id subtipo.id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger">Confirmar</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
       </div>
     </div>
   </div>

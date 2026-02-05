@@ -117,6 +117,7 @@ urlpatterns = [
     path('procesos/tipos/create/', views.tipo_proceso_create, name='tipo_proceso_create'),
     path('procesos/tipos/<int:tipo_id>/update/', views.tipo_proceso_update, name='tipo_proceso_update'),
     path('procesos/tipos/<int:tipo_id>/toggle/', views.tipo_proceso_toggle, name='tipo_proceso_toggle'),
+    path('procesos/tipos/<int:tipo_id>/eliminar/', views.tipo_proceso_eliminar, name='tipo_proceso_eliminar'),
     path(
         'procesos/tipos/<int:tipo_id>/subtipos/',
         views.subtipos_proceso_list,
@@ -136,6 +137,11 @@ urlpatterns = [
         'procesos/subtipos/<int:subtipo_id>/toggle/',
         views.subtipo_proceso_toggle,
         name='subtipo_proceso_toggle',
+    ),
+    path(
+        'procesos/tipos/<int:tipo_id>/subtipos/<int:subtipo_id>/eliminar/',
+        views.subtipo_proceso_eliminar,
+        name='subtipo_proceso_eliminar',
     ),
     path(
         'procesos/tipos/<int:tipo_id>/pasos/',
@@ -166,6 +172,11 @@ urlpatterns = [
         'procesos/pasos/<int:paso_id>/toggle/',
         views.paso_toggle,
         name='paso_toggle',
+    ),
+    path(
+        'procesos/pasos/<int:paso_id>/eliminar/',
+        views.paso_proceso_eliminar,
+        name='paso_proceso_eliminar',
     ),
 
 

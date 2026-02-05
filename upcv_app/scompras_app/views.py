@@ -102,6 +102,10 @@ from .services.presupuesto_import import import_rows, read_rows
 from django.views.decorators.http import require_GET
 from django.db.models.functions import Coalesce
 from django.db import transaction, IntegrityError
+try:
+    from django.db.models.deletion import ProtectedError
+except ImportError:  # pragma: no cover - fallback for older Django
+    ProtectedError = Exception
 from django.db.models import Sum
 from django.shortcuts import render
 from django.template.loader import render_to_string
@@ -137,10 +141,6 @@ from django.contrib.auth.backends import ModelBackend
 from django.db import connections
 
 logger = logging.getLogger(__name__)
-
-
-def _json_form_errors(form):
-    return {field: [str(error) for error in errors] for field, errors in form.errors.items()}
 
 
 def _json_form_errors(form):
@@ -1390,6 +1390,58 @@ def paso_toggle(request, paso_id):
     paso.activo = not paso.activo
     paso.save(update_fields=["activo"])
     return JsonResponse({"success": True, "activo": paso.activo, "message": "Actualizado"})
+
+
+@login_required
+@admin_only_config
+@require_POST
+def tipo_proceso_eliminar(request, tipo_id):
+    tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
+    try:
+        tipo.delete()
+        messages.success(request, "Tipo de proceso eliminado correctamente.")
+    except (ProtectedError, IntegrityError):
+        messages.error(
+            request,
+            "No se puede eliminar porque está en uso. Puede desactivarlo en su lugar.",
+        )
+    return redirect("scompras:tipos_proceso_list")
+
+
+@login_required
+@admin_only_config
+@require_POST
+def subtipo_proceso_eliminar(request, tipo_id, subtipo_id):
+    subtipo = get_object_or_404(SubtipoProcesoCompra, pk=subtipo_id, tipo_id=tipo_id)
+    try:
+        subtipo.delete()
+        messages.success(request, "Subtipo eliminado correctamente.")
+    except (ProtectedError, IntegrityError):
+        messages.error(
+            request,
+            "No se puede eliminar porque está en uso. Puede desactivarlo en su lugar.",
+        )
+    return redirect("scompras:subtipos_proceso_list", tipo_id=tipo_id)
+
+
+@login_required
+@admin_only_config
+@require_POST
+def paso_proceso_eliminar(request, paso_id):
+    paso = get_object_or_404(ProcesoCompraPaso, pk=paso_id)
+    tipo_id = paso.tipo_id
+    subtipo_id = paso.subtipo_id
+    try:
+        paso.delete()
+        messages.success(request, "Paso eliminado correctamente.")
+    except (ProtectedError, IntegrityError):
+        messages.error(
+            request,
+            "No se puede eliminar porque está en uso. Puede desactivarlo en su lugar.",
+        )
+    if subtipo_id:
+        return redirect("scompras:pasos_subtipo_list", tipo_id=tipo_id, subtipo_id=subtipo_id)
+    return redirect("scompras:pasos_tipo_list", tipo_id=tipo_id)
 
 
 @login_required

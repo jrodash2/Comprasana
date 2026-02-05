@@ -71,6 +71,13 @@
                       >
                         {% if tipo.activo %}Desactivar{% else %}Activar{% endif %}
                       </button>
+                      <button
+                        class="btn btn-danger btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalEliminarTipo{{ tipo.id }}"
+                      >
+                        Eliminar
+                      </button>
                     </td>
                   </tr>
                   {% empty %}
@@ -83,6 +90,28 @@
             </div>
           </div>
         </div>
+        {% for tipo in tipos %}
+        <div class="modal fade" id="modalEliminarTipo{{ tipo.id }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Eliminar tipo de proceso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+              </div>
+              <div class="modal-body">
+                <p class="mb-0">¿Seguro que desea eliminar <strong>{{ tipo.nombre }}</strong>? Esta acción no se puede deshacer.</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'scompras:tipo_proceso_eliminar' tipo.id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger">Confirmar</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
       </div>
     </div>
   </div>
