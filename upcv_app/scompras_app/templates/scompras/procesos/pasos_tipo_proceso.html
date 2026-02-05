@@ -6,7 +6,14 @@
     <div class="page-title">
       <div class="row align-items-center">
         <div class="col-8">
-          <h2 class="mb-0">Pasos del proceso: {{ tipo.nombre }}</h2>
+          <h2 class="mb-0">
+            Pasos del proceso:
+            {% if subtipo %}
+              {{ tipo.nombre }} / Subtipo: {{ subtipo.nombre }}
+            {% else %}
+              {{ tipo.nombre }}
+            {% endif %}
+          </h2>
           <p class="text-muted mb-0">Gestiona el catálogo de pasos por tipo y subtipo.</p>
         </div>
         <div class="col-4 text-end">

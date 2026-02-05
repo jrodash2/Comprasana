@@ -103,9 +103,70 @@ urlpatterns = [
     path('tipos-proceso/crear/', views.crear_tipo_proceso, name='crear_tipo_proceso'),
     path('tipos-proceso/<int:tipo_id>/editar/', views.editar_tipo_proceso, name='editar_tipo_proceso'),
     path('tipos-proceso/<int:tipo_id>/pasos/', views.pasos_tipo_proceso, name='pasos_tipo_proceso'),
+    path(
+        'tipos-proceso/<int:tipo_id>/subtipos/<int:subtipo_id>/pasos/',
+        views.pasos_tipo_proceso,
+        name='pasos_subtipo_proceso',
+    ),
     path('tipos-proceso/<int:tipo_id>/pasos/crear/', views.crear_paso_proceso, name='crear_paso_proceso'),
     path('pasos/<int:paso_id>/editar/', views.editar_paso_proceso, name='editar_paso_proceso'),
     path('subtipos/crear/', views.crear_subtipo_proceso, name='crear_subtipo_proceso'),
+
+    # CRUD Tipos/Subtipos/Pasos
+    path('procesos/tipos/', views.tipos_proceso_list, name='tipos_proceso_list'),
+    path('procesos/tipos/create/', views.tipo_proceso_create, name='tipo_proceso_create'),
+    path('procesos/tipos/<int:tipo_id>/update/', views.tipo_proceso_update, name='tipo_proceso_update'),
+    path('procesos/tipos/<int:tipo_id>/toggle/', views.tipo_proceso_toggle, name='tipo_proceso_toggle'),
+    path(
+        'procesos/tipos/<int:tipo_id>/subtipos/',
+        views.subtipos_proceso_list,
+        name='subtipos_proceso_list',
+    ),
+    path(
+        'procesos/tipos/<int:tipo_id>/subtipos/create/',
+        views.subtipo_proceso_create,
+        name='subtipo_proceso_create',
+    ),
+    path(
+        'procesos/subtipos/<int:subtipo_id>/update/',
+        views.subtipo_proceso_update,
+        name='subtipo_proceso_update',
+    ),
+    path(
+        'procesos/subtipos/<int:subtipo_id>/toggle/',
+        views.subtipo_proceso_toggle,
+        name='subtipo_proceso_toggle',
+    ),
+    path(
+        'procesos/tipos/<int:tipo_id>/pasos/',
+        views.pasos_tipo_list,
+        name='pasos_tipo_list',
+    ),
+    path(
+        'procesos/tipos/<int:tipo_id>/subtipos/<int:subtipo_id>/pasos/',
+        views.pasos_subtipo_list,
+        name='pasos_subtipo_list',
+    ),
+    path(
+        'procesos/tipos/<int:tipo_id>/pasos/create/',
+        views.paso_create_tipo,
+        name='paso_create_tipo',
+    ),
+    path(
+        'procesos/subtipos/<int:subtipo_id>/pasos/create/',
+        views.paso_create_subtipo,
+        name='paso_create_subtipo',
+    ),
+    path(
+        'procesos/pasos/<int:paso_id>/update/',
+        views.paso_update,
+        name='paso_update',
+    ),
+    path(
+        'procesos/pasos/<int:paso_id>/toggle/',
+        views.paso_toggle,
+        name='paso_toggle',
+    ),
 
 
 
