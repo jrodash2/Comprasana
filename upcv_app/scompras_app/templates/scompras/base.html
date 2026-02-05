@@ -293,6 +293,27 @@
               
   {% endif %}
 
+  {% if is_analista %}
+    <li class="sidebar-list" ><i class="fa fa-thumb-tack"> </i><a class="sidebar-link " href="{% url 'scompras:analista_dashboard' %}">
+                    <svg >
+                      <use href="../assets/svg/icon-sprite.svg#stroke-home"></use>
+                    </svg>
+                    <svg class="fill-icon">
+                      <use href="../assets/svg/icon-sprite.svg#fill-home"></use>
+                    </svg><span>Dashboard Analista</span></a>
+                  
+                </li>
+    <li class="sidebar-list"><i class="fa fa-thumb-tack"></i><a class="sidebar-link " href="{% url 'scompras:analista_bandeja' %}">
+                    <svg class="stroke-icon">
+                      <use href="../assets/svg/icon-sprite.svg#stroke-gallery"></use>
+                    </svg>
+                    <svg class="fill-icon">
+                      <use href="../assets/svg/icon-sprite.svg#fill-gallery"></use>
+                    </svg><span>Bandeja Analista</span></a>
+
+                  </li>
+  {% endif %}
+
   {# Mostrar menú administrativo a Administrador/PRESUPUESTO #}
   {% if es_admin or es_presupuesto %}
     <li class="sidebar-list" ><i class="fa fa-thumb-tack"> </i><a class="sidebar-link " href="{% url 'scompras:dashboard_admin' %}">
