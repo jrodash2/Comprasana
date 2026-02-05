@@ -69,7 +69,7 @@
   </div>
 </div>
 
-<div class="modal fade" id="modalCrearTipo" tabindex="-1" aria-hidden="true">
+<div class="modal fade riho-modal" id="modalCrearTipo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -94,14 +94,14 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formCrearTipo" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-upcv-outline" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" form="formCrearTipo" class="btn btn-upcv-primary">Guardar</button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="modalEditarTipo" tabindex="-1" aria-hidden="true">
+<div class="modal fade riho-modal" id="modalEditarTipo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -126,14 +126,14 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formEditarTipo" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-upcv-outline" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" form="formEditarTipo" class="btn btn-upcv-primary">Guardar</button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="modalCrearSubtipo" tabindex="-1" aria-hidden="true">
+<div class="modal fade riho-modal" id="modalCrearSubtipo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -162,8 +162,8 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formCrearSubtipo" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-upcv-outline" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" form="formCrearSubtipo" class="btn btn-upcv-primary">Guardar</button>
       </div>
     </div>
   </div>
@@ -190,11 +190,25 @@
     .then(data => {
       if (data.success) {
         window.location.reload();
-      } else {
-        alert('No fue posible guardar los cambios.');
+      } else if (window.showAppModal) {
+        window.showAppModal({
+          title: 'Error',
+          message: 'No fue posible guardar los cambios.',
+          type: 'error',
+          autoclose: false,
+        });
       }
     })
-    .catch(() => alert('No fue posible guardar los cambios.'));
+    .catch(() => {
+      if (window.showAppModal) {
+        window.showAppModal({
+          title: 'Error',
+          message: 'No fue posible guardar los cambios.',
+          type: 'error',
+          autoclose: false,
+        });
+      }
+    });
   };
 
   const formCrearTipo = document.getElementById('formCrearTipo');

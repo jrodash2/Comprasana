@@ -38,14 +38,7 @@
               <h5>Editar Datos Generales</h5>
             </div>
             <div class="card-body">
-              {% if messages %}
-              <ul>
-                {% for message in messages %}
-                <li class="message">{{ message }}</li>
-                {% endfor %}
-              </ul>
-              {% endif %}
-              
+                            
                {% if form.errors %}
               <div class="alert alert-danger">
                 <ul>
