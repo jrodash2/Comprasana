@@ -74,32 +74,33 @@
 {% endif %}
 
 <!-- Botón Ver PDF (Solo cuando el estado es "Finalizada" o "Rechazada") -->
-{% if (solicitud.estado == 'Finalizada' or solicitud.estado == 'Rechazada') and not is_analista %}
-  <!-- Botón Editar -->
-{% if puede_editar_solicitud_ui %}
-<button type="button" class="btn btn-light btn-sm"
-        data-bs-toggle="modal"
-        data-bs-target="#modalEditarSolicitud"
-        style="margin-top: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;">
-  ✏️ Editar Solicitud
-</button>
-{% endif %}
-{% if puede_imprimir_solicitud_ui %}
-  <button id="btnVerPDF" type="button" 
-          class="btn btn-sm"
-          style="margin-top: 10px; margin-left: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;"
-          onclick="window.open('{% url 'scompras:generar_pdf_solicitud' solicitud.id %}', '_blank')">
-    🖨️ Imprimir Solicitud
-  </button>
-{% endif %}
-{% if puede_anular_solicitud_ui %}
-  <button id="btnRechazar" type="button"
-        class="btn btn-sm"
-        style="margin-top: 10px; margin-left: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;">
-  ❌ Anular Solicitud
-</button>
-{% endif %}
-
+{% if solicitud.estado == 'Finalizada' or solicitud.estado == 'Rechazada' %}
+  {% if not is_analista %}
+    <!-- Botón Editar -->
+    {% if puede_editar_solicitud_ui %}
+    <button type="button" class="btn btn-light btn-sm"
+            data-bs-toggle="modal"
+            data-bs-target="#modalEditarSolicitud"
+            style="margin-top: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;">
+      ✏️ Editar Solicitud
+    </button>
+    {% endif %}
+    {% if puede_imprimir_solicitud_ui %}
+      <button id="btnVerPDF" type="button" 
+              class="btn btn-sm"
+              style="margin-top: 10px; margin-left: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;"
+              onclick="window.open('{% url 'scompras:generar_pdf_solicitud' solicitud.id %}', '_blank')">
+        🖨️ Imprimir Solicitud
+      </button>
+    {% endif %}
+    {% if puede_anular_solicitud_ui %}
+      <button id="btnRechazar" type="button"
+            class="btn btn-sm"
+            style="margin-top: 10px; margin-left: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;">
+      ❌ Anular Solicitud
+    </button>
+    {% endif %}
+  {% endif %}
 {% endif %}
 
 
