@@ -57,6 +57,7 @@
 
 <!-- Responsive css-->
 <link rel="stylesheet" type="text/css" href="{% static 'assets/css/responsive.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'scompras/css/modal_riho.css' %}">
 </head>
   <body> 
 
@@ -483,6 +484,8 @@
 
 {# Bloque opcional para inyectar JS adicional (p. ej. gráficas Chart.js en dashboards) #}
 {% block extra_js %}{% endblock %}
+<script src="{% static 'scompras/js/ui_modals.js' %}"></script>
+{% include "scompras/partials/_alerts_modal_messages.html" %}
 
 <footer class="footer"> <div class="container-fluid"> 
   <div class="row"> <div class="col-md-12 footer-copyright text-center"> 
