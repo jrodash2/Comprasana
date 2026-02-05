@@ -119,7 +119,7 @@
 
 <!-- Modal para Crear Formulario 1H -->
 <div
-  class="modal fade"
+  class="modal fade riho-modal"
   id="crearForm1hModal"
   tabindex="-1"
   aria-labelledby="crearForm1hModalLabel"
@@ -263,7 +263,14 @@
             .then((response) => response.json())
             .then((data) => {
               if (data.error) {
-                alert(data.error);
+                if (window.showAppModal) {
+                  window.showAppModal({
+                    title: 'Error',
+                    message: data.error,
+                    type: 'error',
+                    autoclose: false,
+                  });
+                }
               } else {
                 document.getElementById("id_proveedor").value =
                   data.proveedor_id;
@@ -290,7 +297,14 @@
           .then((response) => response.json())
           .then((data) => {
             if (data.error) {
-              alert(data.error);
+              if (window.showAppModal) {
+                window.showAppModal({
+                  title: 'Error',
+                  message: data.error,
+                  type: 'error',
+                  autoclose: false,
+                });
+              }
             } else {
               document.getElementById("id_telefono_proveedor").value =
                 data.telefono;
