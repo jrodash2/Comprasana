@@ -71,6 +71,7 @@ TEMPLATES = [
                 'scompras_app.context_processors.datos_institucion',
                 'scompras_app.context_processors.media_server_tickets',
                 'scompras_app.context_processors.permisos_configuracion',
+                'scompras_app.context_processors.scompras_roles',
 
             ],
         },

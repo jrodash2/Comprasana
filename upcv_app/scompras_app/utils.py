@@ -1,6 +1,6 @@
 from functools import wraps
 from django.contrib.auth.views import redirect_to_login
-from django.http import JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 
@@ -41,6 +41,18 @@ def bloquear_presupuesto(view_func):
             if request.headers.get("x-requested-with") == "XMLHttpRequest" or request.method == "POST":
                 return JsonResponse({"success": False, "error": "No autorizado."}, status=403)
             return redirect(f"/no-autorizado/?next={request.path}")
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+def deny_analista(view_func):
+    """Bloquea acciones específicas para usuarios del grupo analista."""
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if is_analista(request.user):
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "error": "No autorizado."}, status=403)
+            return HttpResponseForbidden("No autorizado.")
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
