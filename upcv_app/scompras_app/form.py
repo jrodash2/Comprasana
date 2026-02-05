@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User, Group
 from django.forms import CheckboxInput, DateInput, inlineformset_factory, modelformset_factory
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
 
 
 from .models import (
@@ -214,6 +215,20 @@ class TipoProcesoCompraForm(forms.ModelForm):
             "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
+    def clean_codigo(self):
+        codigo = (self.cleaned_data.get("codigo") or "").strip()
+        nombre = (self.cleaned_data.get("nombre") or "").strip()
+        if not codigo and nombre:
+            codigo = slugify(nombre)
+        if not codigo:
+            raise ValidationError("El código es obligatorio.")
+        qs = TipoProcesoCompra.objects.filter(codigo=codigo)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError("Ya existe un tipo con este código.")
+        return codigo
+
 
 class SubtipoProcesoCompraForm(forms.ModelForm):
     class Meta:
@@ -225,6 +240,28 @@ class SubtipoProcesoCompraForm(forms.ModelForm):
             "codigo": forms.TextInput(attrs={"class": "form-control"}),
             "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
+
+    def __init__(self, *args, tipo=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if tipo:
+            self.fields["tipo"].initial = tipo
+            self.fields["tipo"].widget = forms.HiddenInput()
+
+    def clean_codigo(self):
+        codigo = (self.cleaned_data.get("codigo") or "").strip()
+        nombre = (self.cleaned_data.get("nombre") or "").strip()
+        if not codigo and nombre:
+            codigo = slugify(nombre)
+        if not codigo:
+            raise ValidationError("El código es obligatorio.")
+        tipo = self.cleaned_data.get("tipo") or self.instance.tipo
+        if tipo:
+            qs = SubtipoProcesoCompra.objects.filter(tipo=tipo, codigo=codigo)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError("Ya existe un subtipo con este código para el tipo seleccionado.")
+        return codigo
 
 
 class ProcesoCompraPasoForm(forms.ModelForm):
@@ -240,12 +277,15 @@ class ProcesoCompraPasoForm(forms.ModelForm):
             "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
-    def __init__(self, *args, tipo=None, **kwargs):
+    def __init__(self, *args, tipo=None, subtipo=None, **kwargs):
         super().__init__(*args, **kwargs)
         if tipo:
             self.fields["tipo"].initial = tipo
             self.fields["tipo"].widget = forms.HiddenInput()
             self.fields["subtipo"].queryset = SubtipoProcesoCompra.objects.filter(tipo=tipo)
+        if subtipo:
+            self.fields["subtipo"].initial = subtipo
+            self.fields["subtipo"].widget = forms.HiddenInput()
 
     def clean_numero(self):
         numero = self.cleaned_data.get("numero")
@@ -255,8 +295,8 @@ class ProcesoCompraPasoForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        tipo = cleaned_data.get("tipo")
-        subtipo = cleaned_data.get("subtipo")
+        tipo = cleaned_data.get("tipo") or self.instance.tipo
+        subtipo = cleaned_data.get("subtipo") or self.instance.subtipo
         numero = cleaned_data.get("numero")
         if tipo and numero:
             qs = ProcesoCompraPaso.objects.filter(tipo=tipo, subtipo=subtipo, numero=numero)
