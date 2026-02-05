@@ -103,6 +103,11 @@ urlpatterns = [
     path('tipos-proceso/crear/', views.crear_tipo_proceso, name='crear_tipo_proceso'),
     path('tipos-proceso/<int:tipo_id>/editar/', views.editar_tipo_proceso, name='editar_tipo_proceso'),
     path('tipos-proceso/<int:tipo_id>/pasos/', views.pasos_tipo_proceso, name='pasos_tipo_proceso'),
+    path(
+        'tipos-proceso/<int:tipo_id>/subtipos/<int:subtipo_id>/pasos/',
+        views.pasos_tipo_proceso,
+        name='pasos_subtipo_proceso',
+    ),
     path('tipos-proceso/<int:tipo_id>/pasos/crear/', views.crear_paso_proceso, name='crear_paso_proceso'),
     path('pasos/<int:paso_id>/editar/', views.editar_paso_proceso, name='editar_paso_proceso'),
     path('subtipos/crear/', views.crear_subtipo_proceso, name='crear_subtipo_proceso'),

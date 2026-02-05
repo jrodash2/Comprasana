@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
+import logging
 from django.utils.timezone import localtime
 from django.utils import timezone
-from venv import logger
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.forms import IntegerField
@@ -135,6 +135,12 @@ from xhtml2pdf import pisa
 from io import BytesIO
 from django.contrib.auth.backends import ModelBackend
 from django.db import connections
+
+logger = logging.getLogger(__name__)
+
+
+def _json_form_errors(form):
+    return {field: [str(error) for error in errors] for field, errors in form.errors.items()}
 
 
 def _json_form_errors(form):
@@ -1090,15 +1096,25 @@ def crear_subtipo_proceso(request):
 
 
 @login_required
-def pasos_tipo_proceso(request, tipo_id):
+def pasos_tipo_proceso(request, tipo_id, subtipo_id=None):
     if not is_admin(request.user):
         return render(request, 'scompras/403.html', status=403)
     tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
-    pasos = ProcesoCompraPaso.objects.filter(tipo=tipo).select_related("subtipo").order_by("numero")
+    subtipo = None
+    pasos_qs = ProcesoCompraPaso.objects.filter(tipo_id=tipo_id)
+    if subtipo_id:
+        subtipo = get_object_or_404(SubtipoProcesoCompra, pk=subtipo_id, tipo_id=tipo_id)
+        pasos_qs = pasos_qs.filter(subtipo_id=subtipo_id)
+    else:
+        pasos_qs = pasos_qs.filter(subtipo__isnull=True)
+    pasos = pasos_qs.select_related("subtipo").order_by("numero")
+    if settings.DEBUG:
+        logger.info("Pasos tipo=%s subtipo=%s total=%s", tipo_id, subtipo_id, pasos.count())
     context = {
         "tipo": tipo,
+        "subtipo": subtipo,
         "pasos": pasos,
-        "paso_form": ProcesoCompraPasoForm(tipo=tipo),
+        "paso_form": ProcesoCompraPasoForm(tipo=tipo, subtipo=subtipo),
         "subtipos": SubtipoProcesoCompra.objects.filter(tipo=tipo).order_by("nombre"),
     }
     return render(request, "scompras/procesos/pasos_tipo_proceso.html", context)
