@@ -314,7 +314,7 @@
 </style>
 
 {% if es_admin_proceso %}
-<div class="modal fade riho-modal" id="modalAsignarAnalista" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalAsignarAnalista" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -345,7 +345,7 @@
   </div>
 </div>
 
-<div class="modal fade riho-modal" id="modalAsignarTipo" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalAsignarTipo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -388,7 +388,7 @@
 </div>
 {% endif %}
 
-<div class="modal fade riho-modal" id="modalPaso" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalPaso" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -437,25 +437,11 @@
     .then(data => {
       if (data.success) {
         onSuccess();
-      } else if (window.showAppModal) {
-        window.showAppModal({
-          title: 'Error',
-          message: 'No fue posible guardar los cambios.',
-          type: 'error',
-          autoclose: false,
-        });
+      } else {
+        alert('No fue posible guardar los cambios.');
       }
     })
-    .catch(() => {
-      if (window.showAppModal) {
-        window.showAppModal({
-          title: 'Error',
-          message: 'No fue posible guardar los cambios.',
-          type: 'error',
-          autoclose: false,
-        });
-      }
-    });
+    .catch(() => alert('No fue posible guardar los cambios.'));
   };
 
   const asignarAnalistaForm = document.getElementById('formAsignarAnalista');
@@ -528,25 +514,11 @@
       .then(data => {
         if (data.success) {
           window.location.reload();
-        } else if (window.showAppModal) {
-          window.showAppModal({
-            title: 'Error',
-            message: 'No fue posible actualizar el paso.',
-            type: 'error',
-            autoclose: false,
-          });
+        } else {
+          alert('No fue posible actualizar el paso.');
         }
       })
-      .catch(() => {
-        if (window.showAppModal) {
-          window.showAppModal({
-            title: 'Error',
-            message: 'No fue posible actualizar el paso.',
-            type: 'error',
-            autoclose: false,
-          });
-        }
-      });
+      .catch(() => alert('No fue posible actualizar el paso.'));
     });
   }
 

@@ -57,7 +57,6 @@
 
 <!-- Responsive css-->
 <link rel="stylesheet" type="text/css" href="{% static 'assets/css/responsive.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'scompras/css/modal_riho.css' %}">
 </head>
   <body> 
 
@@ -445,8 +444,6 @@
 
 {# Permite a vistas específicas inyectar JS adicional (p. ej. dashboards con Chart.js) #}
 {% block extra_js %}{% endblock %}
-<script src="{% static 'scompras/js/ui_modals.js' %}"></script>
-{% include "scompras/partials/_alerts_modal_messages.html" %}
 
 <!-- Footer SIEMPRE va fuera de .page-body -->
   <footer class="footer">

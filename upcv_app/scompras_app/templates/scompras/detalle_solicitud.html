@@ -564,7 +564,7 @@
 
 
 <!-- Modal Agregar Servicio -->
-<div class="modal fade riho-modal" id="modalAgregarServicio" tabindex="-1" aria-labelledby="modalAgregarServicioLabel" aria-hidden="true">
+<div class="modal fade" id="modalAgregarServicio" tabindex="-1" aria-labelledby="modalAgregarServicioLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-md">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
@@ -624,7 +624,7 @@
 
 
 <!-- Modal Editar Solicitud -->
-<div class="modal fade riho-modal" id="modalEditarSolicitud" tabindex="-1" aria-labelledby="modalEditarSolicitudLabel" aria-hidden="true">
+<div class="modal fade" id="modalEditarSolicitud" tabindex="-1" aria-labelledby="modalEditarSolicitudLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
@@ -712,73 +712,73 @@
 
 
 <!-- Modal Ingresar Cantidad -->
-<div class="modal fade riho-modal" id="modalCantidad" tabindex="-1" aria-labelledby="modalCantidadLabel" aria-hidden="true">
+<div class="modal fade" id="modalCantidad" tabindex="-1" aria-labelledby="modalCantidadLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
-        <div class="riho-bg"></div>
-        <div class="riho-content">
 
-          <!-- Encabezado -->
-          <div class="title-wrapper pb-3 modal-heading text-center">
-            <h5 class="theme-name mb-0 modal-title"><span>Agregar - </span>Cantidad de Insumo</h5>
-            <p class="modal-subtitle mb-0">Ingrese la cantidad del insumo que desea solicitar.</p>
-          </div>
-
-          <!-- Imagen decorativa -->
-          <div class="overflow-hidden text-center mb-4">
-            <img class="img-fluid"
-                 src="{% static 'assets/images/logo/logo.png' %}"
-                 alt="Imagen decorativa"
-                 style="max-height: 44px;">
-          </div>
-
-          <!-- Formulario -->
-          <form id="formCantidad">
-            <div class="row justify-content-center">
-              <div class="col-md-8 mb-3">
-                <label for="inputCantidad" class="form-label">Cantidad solicitada:</label>
-                <input type="number"
-                       id="inputCantidad"
-                       name="cantidad"
-                       class="form-control text-center fs-5"
-                       min="1"
-                       placeholder="Ingrese una cantidad"
-                       required>
-              </div>
-
-              <!-- Nuevo campo -->
-              <div class="col-md-8 mb-3">
-                <label for="inputCaracteristica" class="form-label">Característica especial:</label>
-                <textarea id="inputCaracteristica"
-                          name="caracteristica"
-                          class="form-control fs-5"
-                          rows="2"
-                          placeholder="Ejemplo: color específico, pureza, tipo de envase, etc."></textarea>
-              </div>
-            </div>
-
-            <input type="hidden" id="codigo-presentacion-modal">
-
-            <!-- Botones -->
-            <div class="d-flex justify-content-center gap-3 mt-4">
-              <button type="button" id="btnGuardarCantidad" class="btn btn-upcv-primary">
-                Agregar Insumo
-              </button>
-              <button type="button" class="btn btn-upcv-outline" data-bs-dismiss="modal">
-                Cancelar
-              </button>
-            </div>
-          </form>
-
+        <!-- Encabezado -->
+        <div class="title-wrapper pb-3 modal-heading text-center">
+          <h5 class="theme-name mb-0"><span>Agregar - </span>Cantidad de Insumo</h5>
+          <p>Ingrese la cantidad del insumo que desea solicitar.</p>
         </div>
+
+        <!-- Imagen decorativa -->
+        <div class="overflow-hidden text-center mb-4">
+          <img class="img-fluid" 
+               src="{% static 'assets/images/logo/logo.png' %}" 
+               alt="Imagen decorativa" 
+               style="max-width: 120px;">
+        </div>
+
+        <!-- Formulario -->
+        <form id="formCantidad">
+          <div class="row justify-content-center">
+  <div class="col-md-8 mb-3">
+    <label for="inputCantidad" class="form-label fw-semibold">Cantidad solicitada:</label>
+    <input type="number" 
+           id="inputCantidad" 
+           name="cantidad" 
+           class="form-control text-center fs-5" 
+           min="1" 
+           placeholder="Ingrese una cantidad" 
+           required>
+  </div>
+
+  <!-- Nuevo campo -->
+  <div class="col-md-8 mb-3">
+    <label for="inputCaracteristica" class="form-label fw-semibold">Característica especial:</label>
+    <textarea id="inputCaracteristica"
+              name="caracteristica"
+              class="form-control fs-5"
+              rows="2"
+              placeholder="Ejemplo: color específico, pureza, tipo de envase, etc."></textarea>
+  </div>
+</div>
+
+
+          <input type="hidden" id="codigo-presentacion-modal">
+
+          <!-- Botones -->
+          <div class="modal-footer justify-content-center border-top-0 mt-4">
+            <button type="button" id="btnGuardarCantidad" class="btn btn-primary px-4">
+              Agregar Insumo
+            </button>
+            <button type="button" class="btn" 
+                    style="background-color: #0068ab; color: white;" 
+                    data-bs-dismiss="modal">
+              Cancelar
+            </button>
+          </div>
+        </form>
+
       </div>
     </div>
   </div>
 </div>
 
 <!-- Modal editar característica especial -->
-<div class="modal fade riho-modal" id="modalEditarCaracteristica" tabindex="-1" aria-labelledby="modalEditarCaracteristicaLabel" aria-hidden="true">
+<div class="modal fade" id="modalEditarCaracteristica" tabindex="-1" aria-labelledby="modalEditarCaracteristicaLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-md">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">
@@ -812,7 +812,7 @@
 </div>
 
 <!-- Modal de Alerta -->
-<div class="modal fade riho-modal" id="modalAlerta" tabindex="-1" aria-labelledby="modalAlertaLabel" aria-hidden="true">
+<div class="modal fade" id="modalAlerta" tabindex="-1" aria-labelledby="modalAlertaLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-md">
     <div class="modal-content dark-sign-up">
       <div class="modal-body social-profile text-start p-4">

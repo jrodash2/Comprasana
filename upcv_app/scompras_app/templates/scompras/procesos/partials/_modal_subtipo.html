@@ -1,4 +1,4 @@
-<div class="modal fade riho-modal" id="modalSubtipo" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalSubtipo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -9,7 +9,7 @@
         <form id="subtipoForm" data-url="">
           {% csrf_token %}
           <input type="hidden" name="tipo" id="subtipoTipo" value="{{ tipo.id }}">
-          <div class="riho-modal-errors d-none" id="subtipoFormErrors"></div>
+          <div class="alert alert-danger d-none" id="subtipoFormErrors"></div>
           <div class="mb-3">
             <label class="form-label">Tipo</label>
             <input type="text" class="form-control" value="{{ tipo.nombre }}" readonly>
@@ -29,8 +29,8 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-upcv-outline" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="subtipoForm" class="btn btn-upcv-primary">Guardar</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" form="subtipoForm" class="btn btn-primary">Guardar</button>
       </div>
     </div>
   </div>

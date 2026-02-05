@@ -34,7 +34,14 @@
           </div>
           <div class="card-body">
             <!-- Mostramos los mensajes de éxito o error si existen -->
-            
+            {% if messages %}
+              <ul>
+                {% for message in messages %}
+                  <li class="message">{{ message }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+
             <!-- Formulario para importar archivo Excel y registrar fecha -->
             <form method="POST" enctype="multipart/form-data">
               {% csrf_token %}

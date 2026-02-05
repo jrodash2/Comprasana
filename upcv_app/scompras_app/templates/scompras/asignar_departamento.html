@@ -45,7 +45,14 @@
             <div class="card-body">
 
               <!-- Mostrar mensajes -->
-              
+              {% if messages %}
+              <ul>
+                {% for message in messages %}
+                <li class="message">{{ message }}</li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+
               {% if form.errors %}
               <div class="alert alert-danger">
                 <ul>
@@ -196,7 +203,7 @@
 
 <div class="blur-overlay"></div>
 
-<div class="modal fade riho-modal" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content dark-sign-up">
       <form id="deleteForm" method="POST">

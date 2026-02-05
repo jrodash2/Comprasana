@@ -74,7 +74,7 @@
   </div>
 </div>
 
-<div class="modal fade riho-modal" id="modalCrearPaso" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalCrearPaso" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -108,14 +108,14 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-upcv-outline" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formCrearPaso" class="btn btn-upcv-primary">Guardar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" form="formCrearPaso" class="btn btn-primary">Guardar</button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade riho-modal" id="modalEditarPaso" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalEditarPaso" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -154,8 +154,8 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-upcv-outline" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formEditarPaso" class="btn btn-upcv-primary">Guardar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" form="formEditarPaso" class="btn btn-primary">Guardar</button>
       </div>
     </div>
   </div>
@@ -182,25 +182,11 @@
     .then(data => {
       if (data.success) {
         window.location.reload();
-      } else if (window.showAppModal) {
-        window.showAppModal({
-          title: 'Error',
-          message: 'No fue posible guardar los cambios.',
-          type: 'error',
-          autoclose: false,
-        });
+      } else {
+        alert('No fue posible guardar los cambios.');
       }
     })
-    .catch(() => {
-      if (window.showAppModal) {
-        window.showAppModal({
-          title: 'Error',
-          message: 'No fue posible guardar los cambios.',
-          type: 'error',
-          autoclose: false,
-        });
-      }
-    });
+    .catch(() => alert('No fue posible guardar los cambios.'));
   };
 
   const formCrearPaso = document.getElementById('formCrearPaso');
