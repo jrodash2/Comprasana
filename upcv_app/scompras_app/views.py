@@ -86,6 +86,7 @@ from django.contrib.auth.models import Group
 from .utils import (
     admin_only_config,
     bloquear_presupuesto,
+    deny_analista,
     es_presupuesto,
     grupo_requerido,
     is_admin,
@@ -1756,6 +1757,7 @@ def obtener_subproductos(request, producto_id):
     return JsonResponse({'subproductos': data})
 
 
+@deny_analista
 @bloquear_presupuesto
 @require_POST
 def editar_solicitud(request):
@@ -1785,6 +1787,7 @@ def editar_solicitud(request):
 
 @login_required
 @csrf_exempt
+@deny_analista
 @bloquear_presupuesto
 def finalizar_solicitud(request):
     if request.method == "POST":
@@ -1817,6 +1820,7 @@ def finalizar_solicitud(request):
 
 @login_required
 @csrf_exempt
+@deny_analista
 @bloquear_presupuesto
 def rechazar_solicitud(request):
     if request.method == "POST":
@@ -1892,6 +1896,7 @@ from django.utils.timezone import localtime
 from django.template.defaultfilters import date as django_date
 from xhtml2pdf import pisa
 
+@deny_analista
 @bloquear_presupuesto
 def generar_pdf_solicitud(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCompra, id=solicitud_id)
