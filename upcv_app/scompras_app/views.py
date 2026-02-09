@@ -78,6 +78,7 @@ from django.db import models
 from django.db.models import Sum, F, Value, Count, Q, Case, When, OuterRef, Subquery, IntegerField, DecimalField, ExpressionWrapper
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import redirect_to_login
+from django.conf import settings
 from collections import defaultdict
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
@@ -97,6 +98,7 @@ from .utils import (
     inicializar_pasos_estado,
     recalcular_paso_actual,
     puede_imprimir_cdp,
+    cdps_sumables,
 )
 from .services.presupuesto_import import import_rows, read_rows
 from django.views.decorators.http import require_GET
@@ -865,13 +867,13 @@ class SolicitudCompraDetailView(DetailView):
         cdps = solicitud.cdps.select_related('renglon', 'renglon__presupuesto_anual', 'cdo').all()
         context['cdps'] = cdps
         context['tiene_cdo'] = cdps.filter(cdo__isnull=False).exists()
-        context['cdps_reservados'] = cdps.filter(estado=CDP.Estado.RESERVADO)
+        context['cdps_reservados'] = cdps_sumables(cdps)
         context['cdps_ejecutados'] = cdps.filter(estado=CDP.Estado.EJECUTADO)
 
         if cdps:
             cdp_principal = cdps.first()
             context['cdp_principal'] = cdp_principal
-            total_cdp = cdps.aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
+            total_cdp = cdps_sumables(cdps).aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
             if cdps.filter(estado=CDP.Estado.EJECUTADO).exists():
                 estado_resumen = CDP.Estado.EJECUTADO
             elif cdps.filter(estado=CDP.Estado.RESERVADO).exists():
@@ -2299,8 +2301,9 @@ def generar_pdf_cdp(request, cdp_id):
             .order_by('id')
         )
 
+    cdps = cdps_sumables(cdps)
     detalles_cdp = []
-    total_reservado = Decimal('0.00')
+    total_reservado = cdps.aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
     for item in cdps:
         renglon_compacto = getattr(item.renglon, "label_compacto", None)
         if not renglon_compacto:
@@ -2318,7 +2321,6 @@ def generar_pdf_cdp(request, cdp_id):
                 "estado": item.get_estado_display(),
             }
         )
-        total_reservado += item.monto or Decimal('0.00')
 
     institucion = Institucion.objects.first()
     ejercicio_fiscal = "-"
@@ -2481,11 +2483,27 @@ def dashboard_admin(request):
             total_ejecutado=Sum('monto_ejecutado'),
         )
 
+        total_reservado_cdps = CDP.objects.filter(
+            estado=CDP.Estado.RESERVADO,
+            renglon__presupuesto_anual=presupuesto_activo,
+        ).aggregate(
+            total=Coalesce(Sum('monto'), Decimal('0.00')),
+        )['total']
+
         total_inicial = totales.get('total_inicial') or Decimal('0.00')
         total_modificado = totales.get('total_modificado') or Decimal('0.00')
-        total_reservado = totales.get('total_reservado') or Decimal('0.00')
+        total_reservado_renglones = totales.get('total_reservado') or Decimal('0.00')
+        # Usar CDP reservados reales para el dashboard (excluye LIBERADO).
+        total_reservado = total_reservado_cdps
         total_ejecutado = totales.get('total_ejecutado') or Decimal('0.00')
         total_disponible = (total_inicial + total_modificado) - (total_reservado + total_ejecutado)
+
+        if settings.DEBUG:
+            logger.debug(
+                "Dashboard reservado: renglones=%s cdps=%s",
+                total_reservado_renglones,
+                total_reservado_cdps,
+            )
 
         presupuesto_resumen = {
             'anio': presupuesto_activo.anio,
