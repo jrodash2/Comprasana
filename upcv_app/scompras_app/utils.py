@@ -101,6 +101,12 @@ def grupo_requerido(*nombres_grupos):
     return decorador
 
 
+def cdps_sumables(qs):
+    from scompras_app.models import CDP
+
+    return qs.filter(estado=CDP.Estado.RESERVADO)
+
+
 def obtener_pasos_catalogo(solicitud):
     from django.db.models import Q
     from scompras_app.models import ProcesoCompraPaso
