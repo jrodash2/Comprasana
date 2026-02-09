@@ -102,6 +102,7 @@ def grupo_requerido(*nombres_grupos):
 
 
 def cdps_sumables(qs):
+    """Retorna solo CDP reservados para sumas consolidadas."""
     from scompras_app.models import CDP
 
     return qs.filter(estado=CDP.Estado.RESERVADO)

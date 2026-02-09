@@ -78,6 +78,7 @@ from django.db import models
 from django.db.models import Sum, F, Value, Count, Q, Case, When, OuterRef, Subquery, IntegerField, DecimalField, ExpressionWrapper
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import redirect_to_login
+from django.conf import settings
 from collections import defaultdict
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
@@ -2482,11 +2483,27 @@ def dashboard_admin(request):
             total_ejecutado=Sum('monto_ejecutado'),
         )
 
+        total_reservado_cdps = CDP.objects.filter(
+            estado=CDP.Estado.RESERVADO,
+            renglon__presupuesto_anual=presupuesto_activo,
+        ).aggregate(
+            total=Coalesce(Sum('monto'), Decimal('0.00')),
+        )['total']
+
         total_inicial = totales.get('total_inicial') or Decimal('0.00')
         total_modificado = totales.get('total_modificado') or Decimal('0.00')
-        total_reservado = totales.get('total_reservado') or Decimal('0.00')
+        total_reservado_renglones = totales.get('total_reservado') or Decimal('0.00')
+        # Usar CDP reservados reales para el dashboard (excluye LIBERADO).
+        total_reservado = total_reservado_cdps
         total_ejecutado = totales.get('total_ejecutado') or Decimal('0.00')
         total_disponible = (total_inicial + total_modificado) - (total_reservado + total_ejecutado)
+
+        if settings.DEBUG:
+            logger.debug(
+                "Dashboard reservado: renglones=%s cdps=%s",
+                total_reservado_renglones,
+                total_reservado_cdps,
+            )
 
         presupuesto_resumen = {
             'anio': presupuesto_activo.anio,
