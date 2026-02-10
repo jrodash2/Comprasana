@@ -49692,3 +49692,46 @@ html[dir=rtl] body.dark-only .page-wrapper .page-body-wrapper .page-body .card:n
   5.9 Box-layout CSS Ends
 ==========================**/
 /*# sourceMappingURL=style.css.map */
+
+/* =========================
+   Estados CDP
+========================= */
+.cdp-badge {
+  border-radius: .35rem;
+  font-weight: 600;
+  padding: .45rem .8rem;
+  font-size: .875rem;
+  display: inline-block;
+  line-height: 1;
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+
+.cdp-badge--reservado {
+  background: #fff8c4;
+  color: #111;
+  border: 1px solid #f2d600;
+}
+
+.cdp-badge--reservado:hover {
+  background: #fff27f;
+}
+
+.cdp-badge--ejecutado {
+  background: #daf7d7;
+  color: #111;
+  border: 1px solid #2eb82e;
+}
+
+.cdp-badge--ejecutado:hover {
+  background: #bfffbf;
+}
+
+.cdp-badge--liberado {
+  background: #fadbd8;
+  color: #111;
+  border: 1px solid #c0392b;
+}
+
+.cdp-badge--liberado:hover {
+  background: #f8c1bb;
+}
