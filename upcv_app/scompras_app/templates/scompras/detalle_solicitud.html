@@ -177,54 +177,61 @@
               {{ solicitud.descripcion }}
             </p>
 
-            <div class="card mt-3">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">CDP de la Solicitud</h5>
+            <div class="cdp-card mt-3">
+              <div class="cdp-card__header">
+                <h5 class="cdp-card__title">CDP de la solicitud</h5>
                 {% if puede_crear_cdp and es_admin %}
-                  <a class="btn btn-primary btn-sm" href="{% url 'scompras:crear_cdp_solicitud' solicitud.id %}">Crear CDP</a>
+                  <a class="btn-cdp btn-cdp--primary" href="{% url 'scompras:crear_cdp_solicitud' solicitud.id %}">Crear CDP</a>
                 {% elif es_scompras %}
                   <span class="text-muted small">Solo lectura presupuestaria.</span>
                 {% elif not presupuesto_activo %}
                   <span class="text-danger small">Active un presupuesto para habilitar CDP.</span>
                 {% endif %}
               </div>
-              <div class="card-body">
+              <div class="cdp-card__body">
                 {% if cdp_resumen %}
-                  <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                  <div class="cdp-grid">
                     <div>
-                      <p class="mb-1 fw-semibold">CDP #{{ cdp_resumen.id }}</p>
-                      <p class="mb-1">Estado: <span class="badge bg-info text-dark">{{ cdp_resumen.estado_display }}</span></p>
-                      <p class="mb-0">Monto total: <strong>{{ cdp_resumen.monto_total|money_gtq }}</strong></p>
+                      <p class="cdp-headline">CDP #{{ cdp_resumen.id }}</p>
+                      <div class="cdp-row">
+                        <span class="cdp-label">Estado</span>
+                        <span class="cdp-badge {% if cdp_resumen.estado == 'RESERVADO' %}cdp-badge--reservado{% elif cdp_resumen.estado == 'EJECUTADO' %}cdp-badge--ejecutado{% elif cdp_resumen.estado == 'LIBERADO' %}cdp-badge--liberado{% endif %}">{{ cdp_resumen.estado_display }}</span>
+                      </div>
+                      <div class="cdp-row">
+                        <span class="cdp-label">Monto total</span>
+                        <span class="cdp-amount">{{ cdp_resumen.monto_total|money_gtq }}</span>
+                      </div>
                       {% if cdp_totales %}
-                        <p class="mb-0 text-muted small">Reservado: {{ cdp_totales.total_reservado|money_gtq }} | Ejecutado: {{ cdp_totales.total_ejecutado|money_gtq }}</p>
-                      {% endif %}
-                    </div>
-                    <div class="text-end">
-                      {% if cdp_reservado_para_accion and puede_gestionar_cdp and cdp_reservado_para_accion.renglon.presupuesto_anual.activo and es_admin %}
-                        <a class="btn btn-success btn-sm" href="{% url 'scompras:ejecutar_cdp' cdp_reservado_para_accion.id %}">Ejecutar CDO</a>
-                        <a class="btn btn-warning btn-sm" href="{% url 'scompras:liberar_cdp' cdp_reservado_para_accion.id %}">Liberar CDP</a>
-                        {% if mostrar_liberar_todos %}
-                          <a class="btn btn-outline-danger btn-sm mt-2" href="{% url 'scompras:liberar_cdps_solicitud' solicitud.id %}">Liberar todos los CDP reservados</a>
-                        {% endif %}
-                      {% elif es_scompras %}
-                        <span class="text-muted">Visualización informativa.</span>
-                      {% elif cdp_resumen.estado == 'RESERVADO' and not presupuesto_activo %}
-                        <span class="text-danger">Presupuesto inactivo.</span>
-                      {% endif %}
-                      {% if cdp_resumen and puede_imprimir_cdp %}
-                        <button
-                          class="btn btn-outline-secondary btn-sm mt-2"
-                          type="button"
-                          onclick="window.open('{% url 'scompras:generar_pdf_cdp' cdp_resumen.id %}', '_blank')"
-                        >
-                          🖨️ Imprimir CDP
-                        </button>
+                        <p class="cdp-meta">Reservado: {{ cdp_totales.total_reservado|money_gtq }} | Ejecutado: {{ cdp_totales.total_ejecutado|money_gtq }}</p>
                       {% endif %}
                       {% if cdp_principal %}
-                        <div class="mt-2">
-                          <small class="text-muted">Renglón: {{ cdp_principal.renglon.label_compacto }}</small>
-                        </div>
+                        <div class="cdp-divider"></div>
+                        <p class="cdp-renglon mb-0">Renglón: {{ cdp_principal.renglon.label_compacto }}</p>
                       {% endif %}
+                    </div>
+                    <div>
+                      <div class="cdp-actions">
+                        {% if cdp_reservado_para_accion and puede_gestionar_cdp and cdp_reservado_para_accion.renglon.presupuesto_anual.activo and es_admin %}
+                          <a class="btn-cdp btn-cdp--success" href="{% url 'scompras:ejecutar_cdp' cdp_reservado_para_accion.id %}">Ejecutar CDO</a>
+                          <a class="btn-cdp btn-cdp--warning" href="{% url 'scompras:liberar_cdp' cdp_reservado_para_accion.id %}">Liberar CDP</a>
+                          {% if mostrar_liberar_todos %}
+                            <a class="btn-cdp btn-cdp--danger-outline" href="{% url 'scompras:liberar_cdps_solicitud' solicitud.id %}">Liberar todos los CDP reservados</a>
+                          {% endif %}
+                        {% elif es_scompras %}
+                          <span class="text-muted">Visualización informativa.</span>
+                        {% elif cdp_resumen.estado == 'RESERVADO' and not presupuesto_activo %}
+                          <span class="text-danger">Presupuesto inactivo.</span>
+                        {% endif %}
+                        {% if cdp_resumen and puede_imprimir_cdp %}
+                          <button
+                            class="btn-cdp btn-cdp--neutral-outline"
+                            type="button"
+                            onclick="window.open('{% url 'scompras:generar_pdf_cdp' cdp_resumen.id %}', '_blank')"
+                          >
+                            Imprimir CDP
+                          </button>
+                        {% endif %}
+                      </div>
                     </div>
                   </div>
                 {% else %}
