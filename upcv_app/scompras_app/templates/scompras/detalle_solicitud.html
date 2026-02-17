@@ -325,7 +325,9 @@
   
 </style>
 
-<table id="tabla-insumos-agregados">
+<div id="servicios-section" data-role="servicios-section">
+<div id="servicio-guard" data-has-servicio="{% if servicios %}1{% else %}0{% endif %}"></div>
+<table id="tabla-insumos-agregados" data-role="tabla-insumos" >
   <thead>
     <tr>
       <th style="font-size:12px;">Cantidad Solicitada</th>
@@ -503,6 +505,8 @@
   </tbody>
 </table>
 
+</div>
+
 
 
           </td>
@@ -515,7 +519,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
   <div>
-    <button id="btnAgregarServicio" class="btn btn-primary btn-sm me-2">
+    <button id="btnAgregarServicio" data-role="btn-abrir-servicio" class="btn btn-primary btn-sm me-2">
       ➕ Agregar Servicio
     </button>
     <button id="btnLimpiarFiltros" class="btn btn-primary btn-sm">
@@ -583,7 +587,7 @@
         </div>
 
         <!-- Formulario -->
-        <form id="formAgregarServicio">
+        <form id="form-servicio">
           {% csrf_token %}
           <input type="hidden" name="solicitud_id" value="{{ solicitud.id }}">
 
@@ -614,7 +618,7 @@
 
 
           <div class="modal-footer justify-content-center border-top-0 mt-4">
-            <button type="button" id="btnGuardarServicio" class="btn btn-primary px-4">Agregar Servicio</button>
+            <button type="submit" id="btn-agregar-servicio" class="btn btn-primary px-4">Agregar Servicio</button>
             <button type="button" class="btn" data-bs-dismiss="modal" style="background-color:#0068ab; color:white;">Cancelar</button>
           </div>
         </form>
@@ -1347,15 +1351,107 @@ $('#tabla-insumos-agregados').on('click', '.eliminar-servicio', function () {
 
 
     
-/* === AGREGAR SERVICIO === */
-$('#btnAgregarServicio').on('click', function() {
-    $('#formAgregarServicio')[0].reset();
+/* === AGREGAR SERVICIO (máximo 1 por solicitud) === */
+const servicioGuard = document.getElementById('servicio-guard');
+let hasServicio = servicioGuard && servicioGuard.dataset.hasServicio === '1';
+const formServicio = $('#form-servicio');
+const btnAbrirServicio = $('#btnAgregarServicio');
+const btnAgregarServicio = $('#btn-agregar-servicio');
+
+function ensureServicioUnicoModal() {
+    if (document.getElementById('modalServicioUnico')) {
+        return;
+    }
+
+    const modalHtml = `
+      <div class="modal fade" id="modalServicioUnico" tabindex="-1" aria-labelledby="modalServicioUnicoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+              <h5 class="modal-title d-flex align-items-center gap-2" id="modalServicioUnicoLabel">
+                <span class="text-warning fs-4">⚠️</span> Servicio ya registrado
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body pt-2">
+              <p class="mb-0 text-muted">Esta solicitud ya tiene un servicio agregado. Solo se permite 1 servicio por solicitud.</p>
+            </div>
+            <div class="modal-footer border-0">
+              <button type="button" class="btn btn-outline-primary" id="btnVerServicio">Ver servicio</button>
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function showServicioUnicoModal() {
+    ensureServicioUnicoModal();
+
+    const section = document.getElementById('tabla-servicios') || document.getElementById('servicios-section');
+    const btnVer = document.getElementById('btnVerServicio');
+    if (btnVer) {
+        btnVer.onclick = function () {
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
+    }
+
+    if (window.bootstrap && window.bootstrap.Modal) {
+        window.bootstrap.Modal.getOrCreateInstance(document.getElementById('modalServicioUnico')).show();
+        return;
+    }
+
+    showModalAlert(
+        'Esta solicitud ya tiene un servicio agregado. Solo se permite 1 servicio por solicitud.',
+        'Servicio ya registrado'
+    );
+}
+
+function applyServicioRestriction() {
+    if (!hasServicio) {
+        return;
+    }
+
+    btnAgregarServicio.prop('disabled', true).addClass('disabled');
+
+    if (!document.getElementById('badgeServicioMaximo')) {
+        btnAgregarServicio.after('<span id="badgeServicioMaximo" class="badge rounded-pill bg-warning text-dark ms-2">1 servicio máximo</span>');
+    }
+}
+
+function handleServicioBlocked(event) {
+    if (!hasServicio) {
+        return false;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    showServicioUnicoModal();
+    return true;
+}
+
+applyServicioRestriction();
+
+btnAbrirServicio.on('click', function(event) {
+    if (handleServicioBlocked(event)) {
+        return;
+    }
+
+    formServicio[0].reset();
     $('#modalAgregarServicio').modal('show');
 });
 
+formServicio.on('submit', function(event) {
+    if (handleServicioBlocked(event)) {
+        return;
+    }
 
-$('#btnGuardarServicio').on('click', function() {
-    const formData = $('#formAgregarServicio').serialize();
+    event.preventDefault();
+    const formData = formServicio.serialize();
+
     $.ajax({
         url: '{% url "scompras:agregar_servicio_solicitud" %}',
         type: 'POST',
@@ -1363,6 +1459,7 @@ $('#btnGuardarServicio').on('click', function() {
         headers: {'X-CSRFToken': csrftoken},
         success: function(response) {
             if (response.success) {
+                hasServicio = true;
                 $('#modalAgregarServicio').modal('hide');
                 showModalAlert('El servicio fue agregado correctamente.', 'Acción realizada');
                 setTimeout(() => location.reload(), 1000);
