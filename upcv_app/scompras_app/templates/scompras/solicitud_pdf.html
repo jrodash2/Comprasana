@@ -128,6 +128,8 @@
   table-layout:fixed;
 }
 
+.table col{ border:0; }
+
 .table th, .table td{
   border:1px solid #999;
   padding:4px 5px;
@@ -135,20 +137,51 @@
   line-height:1.2;
   vertical-align:top;
 
-  /* ✅ mejor compatibilidad xhtml2pdf */
-  word-wrap: break-word;
+  /* ✅ evita que xhtml2pdf reduzca el texto para que “quepa” */
+  -pdf-keep-in-frame-mode: overflow;
+}
+
+.table .text-long{
+  white-space:normal;
+  word-wrap:break-word;
+  overflow-wrap:break-word;
+  word-break:break-all;
+  hyphens:auto;
 }
 
 /* ===== Anchos POR CLASE (xhtml2pdf los respeta mejor) ===== */
 .w-cant{ width:5%;  }
 .w-reng{ width:5%;  }
-.w-cod { width:9%;  }
-.w-nom { width:12%; }
-.w-car { width:28%; }
-.w-esp { width:10%; }
-.w-pre { width:9%;  }
-.w-cup { width:12%; }
-.w-cop { width:10%; }
+.w-nom { width:8%;  }
+.w-car { width:35%; }
+.w-esp { width:22%; }
+.w-pre { width:8%;  }
+.w-cup { width:8%;  }
+.w-cod { width:5%;  }
+.w-cop { width:4%;  }
+
+.anexo-tag{
+  display:block;
+  margin-top:3px;
+  font-size:8px;
+  font-style:italic;
+}
+
+.anexos{
+  margin-top:8px;
+  font-size:9px;
+}
+
+.anexos h4{
+  margin:0 0 4px 0;
+  font-size:10px;
+}
+
+.anexo-item{
+  border:1px solid #999;
+  padding:5px;
+  margin-bottom:4px;
+}
 
     .table th{
       background:#f2f2f2;
@@ -262,6 +295,17 @@
     Por este medio se solicita al Departamento Administrativo Financiero se sirva efectuar la compra de lo que a continuación se detalla:
   </p>
 <table class="table">
+  <colgroup>
+    <col class="w-cant" />
+    <col class="w-reng" />
+    <col class="w-nom" />
+    <col class="w-car" />
+    <col class="w-esp" />
+    <col class="w-pre" />
+    <col class="w-cup" />
+    <col class="w-cod" />
+    <col class="w-cop" />
+  </colgroup>
   <thead>
     <tr>
       <th class="w-cant">Cantidad</th>
@@ -285,8 +329,26 @@
     <td class="center w-reng">{{ detalle.renglon|default:detalle.insumo.renglon|default:"-" }}</td>
 
     <td class="w-nom">{{ detalle.insumo.nombre }}</td>
-    <td class="w-car">{{ detalle.insumo.caracteristicas|default:"-" }}</td>
-    <td class="w-esp">{{ detalle.caracteristica_especial|default:"-" }}</td>
+    <td class="w-car text-long">
+      {% with car_text=detalle.insumo.caracteristicas|default:"-" %}
+        {% if car_text|length > 450 %}
+          {{ car_text|slice:":450" }}...
+          <span class="anexo-tag">(ver anexo INS-{{ detalle.id }}-CAR)</span>
+        {% else %}
+          {{ car_text }}
+        {% endif %}
+      {% endwith %}
+    </td>
+    <td class="w-esp text-long">
+      {% with esp_text=detalle.caracteristica_especial|default:"-" %}
+        {% if esp_text|length > 300 %}
+          {{ esp_text|slice:":300" }}...
+          <span class="anexo-tag">(ver anexo INS-{{ detalle.id }}-ESP)</span>
+        {% else %}
+          {{ esp_text }}
+        {% endif %}
+      {% endwith %}
+    </td>
     <td class="center w-pre">{{ detalle.insumo.nombre_presentacion|default:"-" }}</td>
     <td class="center w-cup">{{ detalle.insumo.cantidad_unidad_presentacion|default:"-" }}</td>
     <td class="center w-cod">{{ detalle.insumo.codigo_insumo }}</td>
@@ -322,8 +384,17 @@
       {% endif %}
     </td>
 
-    <td class="w-car">-</td>
-    <td class="w-esp">{{ s.caracteristica_especial|default_if_none:s.servicio.caracteristica_especial|default:"-" }}</td>
+    <td class="w-car text-long">-</td>
+    <td class="w-esp text-long">
+      {% with esp_serv=s.caracteristica_especial|default_if_none:s.servicio.caracteristica_especial|default:"-" %}
+        {% if esp_serv|length > 300 %}
+          {{ esp_serv|slice:":300" }}...
+          <span class="anexo-tag">(ver anexo SER-{{ s.id }}-ESP)</span>
+        {% else %}
+          {{ esp_serv }}
+        {% endif %}
+      {% endwith %}
+    </td>
     <td class="center w-pre">{{ s.servicio.unidad_medida|default:"-" }}</td>
     <td class="center w-cup">-</td>
     <td class="center w-cod">-</td>
@@ -341,6 +412,38 @@
 
 </table>
 <br>
+
+<div class="anexos">
+  <h4>Anexos de texto extendido</h4>
+  {% for detalle in detalles %}
+    {% with car_text=detalle.insumo.caracteristicas|default:"-" esp_text=detalle.caracteristica_especial|default:"-" %}
+      {% if car_text|length > 450 %}
+      <div class="anexo-item">
+        <strong>INS-{{ detalle.id }}-CAR</strong> — Renglón {{ detalle.renglon|default:detalle.insumo.renglon|default:"-" }} — Características<br>
+        {{ car_text }}
+      </div>
+      {% endif %}
+      {% if esp_text|length > 300 %}
+      <div class="anexo-item">
+        <strong>INS-{{ detalle.id }}-ESP</strong> — Renglón {{ detalle.renglon|default:detalle.insumo.renglon|default:"-" }} — Característica especial<br>
+        {{ esp_text }}
+      </div>
+      {% endif %}
+    {% endwith %}
+  {% endfor %}
+
+  {% for s in servicios %}
+    {% with esp_serv=s.caracteristica_especial|default_if_none:s.servicio.caracteristica_especial|default:"-" %}
+      {% if esp_serv|length > 300 %}
+      <div class="anexo-item">
+        <strong>SER-{{ s.id }}-ESP</strong> — Renglón {{ s.servicio.renglon|default:"-" }} — Característica especial<br>
+        {{ esp_serv }}
+      </div>
+      {% endif %}
+    {% endwith %}
+  {% endfor %}
+</div>
+
  <div id="justificacion">
     <strong>Justificación:</strong> {{ solicitud.descripcion }}
   </div>
