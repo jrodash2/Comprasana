@@ -168,27 +168,17 @@
   text-align:center;
 }
 
-/* ===== Layout A: predomina Características ===== */
-.table-layout-a .w-cant{ width:5%; }
-.table-layout-a .w-reng{ width:6%; }
-.table-layout-a .w-nom { width:12%; }
-.table-layout-a .w-car { width:28%; }
-.table-layout-a .w-esp { width:6%; }
-.table-layout-a .w-pre { width:10%; }
-.table-layout-a .w-cup { width:11%; }
-.table-layout-a .w-cod { width:11%; }
-.table-layout-a .w-cop { width:11%; }
+/* ===== Anchos POR CLASE (más estable para xhtml2pdf) ===== */
+.w-cant{ width:5%;  }
+.w-reng{ width:5%;  }
+.w-cod { width:9%;  }
+.w-nom { width:12%; }
+.w-car { width:28%; }
+.w-esp { width:10%; }
+.w-pre { width:9%;  }
+.w-cup { width:12%; }
+.w-cop { width:10%; }
 
-/* ===== Layout B: predomina Caract. Especial ===== */
-.table-layout-b .w-cant{ width:5%; }
-.table-layout-b .w-reng{ width:6%; }
-.table-layout-b .w-nom { width:12%; }
-.table-layout-b .w-car { width:8%; }
-.table-layout-b .w-esp { width:26%; }
-.table-layout-b .w-pre { width:10%; }
-.table-layout-b .w-cup { width:11%; }
-.table-layout-b .w-cod { width:11%; }
-.table-layout-b .w-cop { width:11%; }
 
 .section-title{
   font-size:10px;
@@ -322,7 +312,7 @@
   </p>
 {% if filas_layout_car %}
   <div class="section-title">Detalle de insumos (predomina Características)</div>
-  <table class="table table-layout-a">
+  <table class="table">
     <colgroup>
       <col class="w-cant" />
       <col class="w-reng" />
@@ -336,15 +326,16 @@
     </colgroup>
     <thead>
       <tr>
-        <th>Cantidad</th>
-        <th>Renglón</th>
-        <th>Nombre</th>
-        <th>Características</th>
-        <th>Caract. Especial</th>
-        <th>Presentación</th>
-        <th>Cant. Unidad<br>Presentación</th>
-        <th class="th-code">Código Insumo</th>
-        <th class="th-code">Código Presentación</th>
+<th width="5%">Cantidad</th>
+<th width="5%">Renglón</th>
+<th width="12%">Nombre</th>
+<th width="28%">Características</th>
+<th width="10%">Caract. Especial</th>
+<th width="9%">Presentación</th>
+<th width="12%">Cant. Unidad<br>Presentación</th>
+<th width="9%">Código Insumo</th>
+<th width="10%">Código Presentación</th>
+
       </tr>
     </thead>
     <tbody>
@@ -367,7 +358,7 @@
 
 {% if filas_layout_esp %}
   <div class="section-title">Detalle de ítems con característica especial</div>
-  <table class="table table-layout-b">
+  <table class="table">
     <colgroup>
       <col class="w-cant" />
       <col class="w-reng" />
@@ -381,15 +372,16 @@
     </colgroup>
     <thead>
       <tr>
-        <th>Cantidad</th>
-        <th>Renglón</th>
-        <th>Nombre</th>
-        <th>Características</th>
-        <th>Caract. Especial</th>
-        <th>Presentación</th>
-        <th>Cant. Unidad<br>Presentación</th>
-        <th class="th-code">Código Insumo</th>
-        <th class="th-code">Código Presentación</th>
+       <th width="5%">Cantidad</th>
+<th width="5%">Renglón</th>
+<th width="12%">Nombre</th>
+<th width="13%">Características</th>
+<th width="25%">Caract. Especial</th>
+<th width="9%">Presentación</th>
+<th width="12%">Cant. Unidad<br>Presentación</th>
+<th width="9%">Código Insumo</th>
+<th width="10%">Código Presentación</th>
+
       </tr>
     </thead>
     <tbody>
