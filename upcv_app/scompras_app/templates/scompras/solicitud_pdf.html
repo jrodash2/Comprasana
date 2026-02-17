@@ -166,30 +166,29 @@
 .table .cell-empty{
   color:#666;
   text-align:center;
-  font-size:8px;
 }
 
 /* ===== Layout A: predomina Características ===== */
-.table-layout-a .w-cant{ width:6%; }
-.table-layout-a .w-reng{ width:7%; }
-.table-layout-a .w-nom { width:22%; }
-.table-layout-a .w-car { width:26%; }
-.table-layout-a .w-esp { width:2%; }
-.table-layout-a .w-pre { width:9%; }
-.table-layout-a .w-cup { width:8%; }
-.table-layout-a .w-cod { width:10%; }
-.table-layout-a .w-cop { width:10%; }
+.table-layout-a .w-cant{ width:5%; }
+.table-layout-a .w-reng{ width:6%; }
+.table-layout-a .w-nom { width:12%; }
+.table-layout-a .w-car { width:28%; }
+.table-layout-a .w-esp { width:6%; }
+.table-layout-a .w-pre { width:10%; }
+.table-layout-a .w-cup { width:11%; }
+.table-layout-a .w-cod { width:11%; }
+.table-layout-a .w-cop { width:11%; }
 
 /* ===== Layout B: predomina Caract. Especial ===== */
-.table-layout-b .w-cant{ width:6%; }
-.table-layout-b .w-reng{ width:7%; }
-.table-layout-b .w-nom { width:20%; }
-.table-layout-b .w-car { width:2%; }
-.table-layout-b .w-esp { width:28%; }
-.table-layout-b .w-pre { width:9%; }
-.table-layout-b .w-cup { width:8%; }
-.table-layout-b .w-cod { width:10%; }
-.table-layout-b .w-cop { width:10%; }
+.table-layout-b .w-cant{ width:5%; }
+.table-layout-b .w-reng{ width:6%; }
+.table-layout-b .w-nom { width:12%; }
+.table-layout-b .w-car { width:8%; }
+.table-layout-b .w-esp { width:26%; }
+.table-layout-b .w-pre { width:10%; }
+.table-layout-b .w-cup { width:11%; }
+.table-layout-b .w-cod { width:11%; }
+.table-layout-b .w-cop { width:11%; }
 
 .section-title{
   font-size:10px;
@@ -321,16 +320,7 @@
   <p class="ptext">
     Por este medio se solicita al Departamento Administrativo Financiero se sirva efectuar la compra de lo que a continuación se detalla:
   </p>
-{# ==========================================================
-   TABLA DETALLE (solo template):
-   - Layout A: insumos usando Características
-   - Layout B: insumos/servicios usando Característica especial
-   Compatibilidad xhtml2pdf: table-layout fixed + anchos por colgroup
-   ========================================================== #}
-
-{% with UMBRAL_CAR=420 UMBRAL_ESP=380 %}
-
-  {# ===== Layout A: predomina Características (insumos) ===== #}
+{% if filas_layout_car %}
   <div class="section-title">Detalle de insumos (predomina Características)</div>
   <table class="table table-layout-a">
     <colgroup>
@@ -358,35 +348,24 @@
       </tr>
     </thead>
     <tbody>
-      {% for detalle in detalles %}
-        {% if not detalle.caracteristica_especial %}
-        <tr>
-          <td class="center">{{ detalle.cantidad }}</td>
-          <td class="center">{{ detalle.renglon|default:detalle.insumo.renglon|default:"-" }}</td>
-          <td class="text-wrap">{{ detalle.insumo.nombre|default:"-" }}</td>
-          <td class="text-wrap">
-            {% with texto=detalle.insumo.caracteristicas|default:"" %}
-              {% if texto|length > UMBRAL_CAR %}
-                Ver anexo: {{ detalle.insumo.nombre|default:"insumo" }}
-              {% else %}
-                {{ texto|default:"-" }}
-              {% endif %}
-            {% endwith %}
-          </td>
-          <td class="cell-empty">-</td>
-          <td class="center">{{ detalle.insumo.nombre_presentacion|default:"-" }}</td>
-          <td class="center">{{ detalle.insumo.cantidad_unidad_presentacion|default:"-" }}</td>
-          <td class="center td-code">{{ detalle.insumo.codigo_insumo|default:"-" }}</td>
-          <td class="center td-code">{{ detalle.insumo.codigo_presentacion|default:"-" }}</td>
-        </tr>
-        {% endif %}
-      {% empty %}
-      <tr><td colspan="9" class="center">No hay insumos agregados.</td></tr>
+      {% for fila in filas_layout_car %}
+      <tr>
+        <td class="center">{{ fila.cantidad }}</td>
+        <td class="center">{{ fila.renglon }}</td>
+        <td class="text-wrap">{{ fila.nombre }}</td>
+        <td class="text-wrap">{{ fila.car_texto_tabla }}</td>
+        <td class="cell-empty">-</td>
+        <td class="center">{{ fila.presentacion }}</td>
+        <td class="center">{{ fila.cant_unidad_presentacion }}</td>
+        <td class="center td-code">{{ fila.codigo_insumo }}</td>
+        <td class="center td-code">{{ fila.codigo_presentacion }}</td>
+      </tr>
       {% endfor %}
     </tbody>
   </table>
+{% endif %}
 
-  {# ===== Layout B: predomina Característica especial ===== #}
+{% if filas_layout_esp %}
   <div class="section-title">Detalle de ítems con característica especial</div>
   <table class="table table-layout-b">
     <colgroup>
@@ -414,101 +393,44 @@
       </tr>
     </thead>
     <tbody>
-      {% for detalle in detalles %}
-        {% if detalle.caracteristica_especial %}
-        <tr>
-          <td class="center">{{ detalle.cantidad }}</td>
-          <td class="center">{{ detalle.renglon|default:detalle.insumo.renglon|default:"-" }}</td>
-          <td class="text-wrap">{{ detalle.insumo.nombre|default:"-" }}</td>
-          <td class="cell-empty">-</td>
-          <td class="text-wrap">
-            {% with texto=detalle.caracteristica_especial|default:"" %}
-              {% if texto|length > UMBRAL_ESP %}
-                Ver anexo: {{ detalle.insumo.nombre|default:"insumo" }}
-              {% else %}
-                {{ texto|default:"-" }}
-              {% endif %}
-            {% endwith %}
-          </td>
-          <td class="center">{{ detalle.insumo.nombre_presentacion|default:"-" }}</td>
-          <td class="center">{{ detalle.insumo.cantidad_unidad_presentacion|default:"-" }}</td>
-          <td class="center td-code">{{ detalle.insumo.codigo_insumo|default:"-" }}</td>
-          <td class="center td-code">{{ detalle.insumo.codigo_presentacion|default:"-" }}</td>
-        </tr>
-        {% endif %}
-      {% endfor %}
-
-      {% for s in servicios %}
+      {% for fila in filas_layout_esp %}
       <tr>
-        <td class="center">{{ s.cantidad|default:"-" }}</td>
-        <td class="center">{{ s.servicio.renglon|default:"-" }}</td>
-        <td class="text-wrap">
-          {% if s.nombre_override != None %}
-            {{ s.nombre_override|default:"-" }}
-          {% else %}
-            {{ s.servicio.concepto|default:"-" }}
-          {% endif %}
-        </td>
+        <td class="center">{{ fila.cantidad }}</td>
+        <td class="center">{{ fila.renglon }}</td>
+        <td class="text-wrap">{{ fila.nombre }}</td>
         <td class="cell-empty">-</td>
-        <td class="text-wrap">
-          {% with texto=s.caracteristica_especial|default_if_none:s.servicio.caracteristica_especial|default:"" %}
-            {% if texto|length > UMBRAL_ESP %}
-              Ver anexo: {% if s.nombre_override %}{{ s.nombre_override }}{% else %}{{ s.servicio.concepto|default:"servicio" }}{% endif %}
-            {% else %}
-              {{ texto|default:"-" }}
-            {% endif %}
-          {% endwith %}
-        </td>
-        <td class="center">{{ s.servicio.unidad_medida|default:"-" }}</td>
-        <td class="center">-</td>
-        <td class="center td-code">-</td>
-        <td class="center td-code">-</td>
+        <td class="text-wrap">{{ fila.esp_texto_tabla }}</td>
+        <td class="center">{{ fila.presentacion }}</td>
+        <td class="center">{{ fila.cant_unidad_presentacion }}</td>
+        <td class="center td-code">{{ fila.codigo_insumo }}</td>
+        <td class="center td-code">{{ fila.codigo_presentacion }}</td>
       </tr>
       {% endfor %}
-
-      {% if not detalles and not servicios %}
-      <tr><td colspan="9" class="center">No hay insumos ni servicios agregados.</td></tr>
-      {% endif %}
     </tbody>
   </table>
+{% endif %}
 
-  {# ===== Anexos (solo texto extenso; no duplicar en tabla) ===== #}
-  <div class="anexos">
-    <h4>Anexos de texto extendido</h4>
+{% if not filas_layout_car and not filas_layout_esp %}
+  <table class="table table-layout-a">
+    <tbody>
+      <tr>
+        <td class="center">No hay insumos ni servicios agregados.</td>
+      </tr>
+    </tbody>
+  </table>
+{% endif %}
 
-    {% for detalle in detalles %}
-      {% with texto=detalle.insumo.caracteristicas|default:"" %}
-        {% if not detalle.caracteristica_especial and texto|length > UMBRAL_CAR %}
-          <div class="anexo-item">
-            <strong>INS-{{ detalle.id }}-CAR</strong> — Insumo: {{ detalle.insumo.nombre|default:"-" }} (Renglón {{ detalle.renglon|default:detalle.insumo.renglon|default:"-" }})<br>
-            <span class="text-wrap">{{ texto }}</span>
-          </div>
-        {% endif %}
-      {% endwith %}
-
-      {% with texto=detalle.caracteristica_especial|default:"" %}
-        {% if detalle.caracteristica_especial and texto|length > UMBRAL_ESP %}
-          <div class="anexo-item">
-            <strong>INS-{{ detalle.id }}-ESP</strong> — Insumo: {{ detalle.insumo.nombre|default:"-" }} (Renglón {{ detalle.renglon|default:detalle.insumo.renglon|default:"-" }})<br>
-            <span class="text-wrap">{{ texto }}</span>
-          </div>
-        {% endif %}
-      {% endwith %}
-    {% endfor %}
-
-    {% for s in servicios %}
-      {% with texto=s.caracteristica_especial|default_if_none:s.servicio.caracteristica_especial|default:"" %}
-        {% if texto|length > UMBRAL_ESP %}
-          <div class="anexo-item">
-            <strong>SER-{{ s.id }}-ESP</strong> — Servicio: {% if s.nombre_override %}{{ s.nombre_override }}{% else %}{{ s.servicio.concepto|default:"-" }}{% endif %} (Renglón {{ s.servicio.renglon|default:"-" }})<br>
-            <span class="text-wrap">{{ texto }}</span>
-          </div>
-        {% endif %}
-      {% endwith %}
-    {% endfor %}
-  </div>
-
-{% endwith %}
+{% if anexos_texto %}
+<div class="anexos">
+  <h4>Anexos de texto extendido</h4>
+  {% for anexo in anexos_texto %}
+    <div class="anexo-item">
+      <strong>{{ anexo.codigo_anexo }}</strong> — {{ anexo.titulo }}<br>
+      <span class="text-wrap">{{ anexo.texto_completo }}</span>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
 
 <div id="justificacion">
     <strong>Justificación:</strong> {{ solicitud.descripcion }}
