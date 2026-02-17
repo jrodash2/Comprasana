@@ -198,10 +198,22 @@
     }
 
     const filasRenglones = Array.from(tablaRenglones.querySelectorAll('tbody tr[data-renglon-id]'));
+
+    const extraerCodigoRenglon = (texto) => {
+      const textoNormalizado = String(texto || '');
+      const matchRenglon = textoNormalizado.match(/rengl[oó]n\s*(\d+)/i);
+      if (matchRenglon && matchRenglon[1]) {
+        return matchRenglon[1].trim();
+      }
+      const matchNumerico = textoNormalizado.match(/\b(\d{2,4})\b/);
+      return matchNumerico ? matchNumerico[1].trim() : '';
+    };
+
     const opcionesOriginales = selectRenglon
       ? Array.from(selectRenglon.options).map((option) => ({
           value: option.value,
           text: option.text,
+          codigo: extraerCodigoRenglon(option.text),
           selected: option.selected,
         }))
       : [];
@@ -224,7 +236,7 @@
         if (!option.value) {
           return true;
         }
-        return option.text.toLowerCase().includes(texto);
+        return !texto || String(option.codigo || '').toLowerCase().includes(texto);
       });
 
       selectRenglon.innerHTML = '';
