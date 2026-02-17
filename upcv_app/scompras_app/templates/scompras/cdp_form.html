@@ -35,10 +35,31 @@
       display: none;
       margin-top: .5rem;
     }
+    .renglon-search-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: .5rem;
+      padding: .75rem;
+      margin-bottom: .75rem;
+    }
+    .renglon-search-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: .4rem;
+      gap: .5rem;
+    }
+    .renglon-search-meta .small {
+      margin-bottom: 0;
+    }
     @media (max-width: 576px) {
       .renglones-toolbar .form-control,
       .renglones-toolbar .form-select {
         min-width: 100%;
+      }
+      .renglon-search-meta {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
   </style>
@@ -78,6 +99,14 @@
               {% csrf_token %}
               <div class="mb-3">
                 <label class="form-label">Renglón presupuestario</label>
+                <div class="renglon-search-box">
+                  <input type="text" id="buscarRenglonSelect" class="form-control" placeholder="Buscar renglón...">
+                  <div class="renglon-search-meta">
+                    <p id="contadorRenglones" class="small text-muted">Mostrando 0 de 0</p>
+                    <button type="button" id="limpiarBusquedaRenglon" class="btn btn-outline-secondary btn-sm">Limpiar</button>
+                  </div>
+                  <p id="sinResultadosSelect" class="small text-danger mt-2 mb-0" style="display:none;">Sin resultados.</p>
+                </div>
                 {{ form.renglon }}
                 {% if form.renglon.errors %}
                   <div class="text-danger small">{{ form.renglon.errors|striptags }}</div>
@@ -157,6 +186,10 @@
     const filtroDisponibilidad = document.getElementById('filtroDisponibilidad');
     const montoInput = document.getElementById('id_monto');
     const selectRenglon = document.getElementById('id_renglon');
+    const buscarRenglonSelect = document.getElementById('buscarRenglonSelect');
+    const limpiarBusquedaRenglon = document.getElementById('limpiarBusquedaRenglon');
+    const contadorRenglones = document.getElementById('contadorRenglones');
+    const sinResultadosSelect = document.getElementById('sinResultadosSelect');
     const tablaRenglones = document.getElementById('tablaRenglonesDisponibles');
     const emptyState = document.getElementById('sinResultadosRenglones');
 
@@ -165,12 +198,54 @@
     }
 
     const filasRenglones = Array.from(tablaRenglones.querySelectorAll('tbody tr[data-renglon-id]'));
+    const opcionesOriginales = selectRenglon
+      ? Array.from(selectRenglon.options).map((option) => ({
+          value: option.value,
+          text: option.text,
+          selected: option.selected,
+        }))
+      : [];
 
     const toNumber = (value) => {
       if (!value) return 0;
       const normalized = String(value).replace(/[^\d.,-]/g, '').replace(/,/g, '');
       const parsed = parseFloat(normalized);
       return Number.isFinite(parsed) ? parsed : 0;
+    };
+
+    const filtrarSelectRenglones = () => {
+      if (!selectRenglon || !buscarRenglonSelect) {
+        return;
+      }
+
+      const texto = buscarRenglonSelect.value.trim().toLowerCase();
+      const valorSeleccionado = selectRenglon.value;
+      const opcionesFiltradas = opcionesOriginales.filter((option) => {
+        if (!option.value) {
+          return true;
+        }
+        return option.text.toLowerCase().includes(texto);
+      });
+
+      selectRenglon.innerHTML = '';
+      opcionesFiltradas.forEach((option) => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option.value;
+        optionElement.textContent = option.text;
+        if (option.value === valorSeleccionado) {
+          optionElement.selected = true;
+        }
+        selectRenglon.appendChild(optionElement);
+      });
+
+      const total = Math.max(opcionesOriginales.length - 1, 0);
+      const visibles = Math.max(opcionesFiltradas.filter((option) => option.value).length, 0);
+      if (contadorRenglones) {
+        contadorRenglones.textContent = 'Mostrando ' + visibles + ' de ' + total;
+      }
+      if (sinResultadosSelect) {
+        sinResultadosSelect.style.display = visibles === 0 ? 'block' : 'none';
+      }
     };
 
     const aplicarFiltros = () => {
@@ -232,11 +307,23 @@
 
     filtroRenglon.addEventListener('input', aplicarFiltros);
     filtroDisponibilidad.addEventListener('change', aplicarFiltros);
+    if (buscarRenglonSelect) {
+      buscarRenglonSelect.addEventListener('input', filtrarSelectRenglones);
+    }
+    if (limpiarBusquedaRenglon) {
+      limpiarBusquedaRenglon.addEventListener('click', function () {
+        if (!buscarRenglonSelect) return;
+        buscarRenglonSelect.value = '';
+        filtrarSelectRenglones();
+        buscarRenglonSelect.focus();
+      });
+    }
     if (montoInput) {
       montoInput.addEventListener('input', aplicarFiltros);
     }
 
     aplicarFiltros();
+    filtrarSelectRenglones();
   });
 </script>
 {% endblock %}
