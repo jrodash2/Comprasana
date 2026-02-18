@@ -322,11 +322,73 @@
     text-decoration: underline;
   }
 
+  /* === Modal servicio único (estilo moderno) === */
+  .servicio-unico-modal .modal-content {
+    border: 0;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    box-shadow: 0 22px 50px rgba(18, 38, 63, 0.22);
+  }
+
+  .servicio-unico-modal .modal-header,
+  .servicio-unico-modal .modal-body,
+  .servicio-unico-modal .modal-footer {
+    border: 0;
+  }
+
+  .servicio-unico-modal .servicio-unico-shell {
+    background: linear-gradient(150deg, #f6fbff 0%, #eef5ff 55%, #eaf2ff 100%);
+    padding: 1.75rem 1.75rem 1.5rem;
+  }
+
+  .servicio-unico-modal .servicio-unico-title {
+    color: #1f2b50;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  .servicio-unico-modal .servicio-unico-copy {
+    color: #516182;
+    font-size: 0.96rem;
+    line-height: 1.55;
+  }
+
+  .servicio-unico-modal .servicio-unico-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 193, 7, 0.18);
+    color: #c98700;
+  }
+
+  .servicio-unico-modal .servicio-unico-logo-wrap {
+    text-align: center;
+    margin: 0.65rem 0 0.9rem;
+  }
+
+  .servicio-unico-modal .servicio-unico-logo {
+    width: 82px;
+    height: auto;
+    opacity: 0.93;
+    filter: drop-shadow(0 8px 16px rgba(16, 47, 89, 0.16));
+  }
+
+  .servicio-unico-modal .btn-servicio-entendido {
+    min-width: 130px;
+    border-radius: 0.65rem;
+    font-weight: 600;
+    padding: 0.52rem 1.2rem;
+  }
+
   
 </style>
 
 <div id="servicios-section" data-role="servicios-section">
 <div id="servicio-guard" data-has-servicio="{% if servicios %}1{% else %}0{% endif %}"></div>
+<div id="servicio-modal-trigger" data-servicio-ya-registrado="{% if servicio_ya_registrado %}1{% else %}0{% endif %}"></div>
 <table id="tabla-insumos-agregados" data-role="tabla-insumos" >
   <thead>
     <tr>
@@ -1360,48 +1422,54 @@ const btnAgregarServicio = $('#btn-agregar-servicio');
 
 function ensureServicioUnicoModal() {
     if (document.getElementById('modalServicioUnico')) {
-        return;
+        return document.getElementById('modalServicioUnico');
     }
 
     const modalHtml = `
-      <div class="modal fade" id="modalServicioUnico" tabindex="-1" aria-labelledby="modalServicioUnicoLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header border-0 pb-0">
-              <h5 class="modal-title d-flex align-items-center gap-2" id="modalServicioUnicoLabel">
-                <span class="text-warning fs-4">⚠️</span> Servicio ya registrado
-              </h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body pt-2">
-              <p class="mb-0 text-muted">Esta solicitud ya tiene un servicio agregado. Solo se permite 1 servicio por solicitud.</p>
-            </div>
-            <div class="modal-footer border-0">
-              <button type="button" class="btn btn-outline-primary" id="btnVerServicio">Ver servicio</button>
-              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
+      <div class="modal fade servicio-unico-modal" id="modalServicioUnico" tabindex="-1" aria-labelledby="modalServicioUnicoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+          <div class="modal-content">
+            <div class="servicio-unico-shell">
+              <div class="modal-header p-0 mb-2">
+                <h5 class="modal-title d-flex align-items-center gap-2 servicio-unico-title" id="modalServicioUnicoLabel">
+                  <span class="servicio-unico-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M7.938 2.016A.13.13 0 0 1 8.063 2h.874c.07 0 .126.056.125.125l-.35 7a.125.125 0 0 1-.125.119h-.474a.125.125 0 0 1-.124-.12l-.35-7A.125.125 0 0 1 7.938 2.016z"/>
+                      <path d="M8.002 15a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2z"/>
+                      <path d="M1.53 13.18 7.12 2.39a1 1 0 0 1 1.76 0l5.59 10.79A1 1 0 0 1 13.59 14H2.41a1 1 0 0 1-.88-.82z" fill-opacity="0.2"/>
+                    </svg>
+                  </span>
+                  Servicio ya registrado
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+              </div>
+              <div class="servicio-unico-logo-wrap">
+                <img class="servicio-unico-logo" src="{% static 'assets/images/logo/logo.png' %}" alt="Logo UPCV">
+              </div>
+              <div class="modal-body p-0">
+                <p class="mb-0 text-center servicio-unico-copy">Esta solicitud ya tiene un servicio agregado. Solo se permite 1 servicio por solicitud.</p>
+              </div>
+              <div class="modal-footer p-0 pt-3 justify-content-center">
+                <button type="button" class="btn btn-primary btn-servicio-entendido" data-bs-dismiss="modal">Entendido</button>
+              </div>
             </div>
           </div>
         </div>
       </div>`;
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modalEl = document.getElementById('modalServicioUnico');
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        window.location.reload();
+    });
+    return modalEl;
 }
 
 function showServicioUnicoModal() {
-    ensureServicioUnicoModal();
-
-    const section = document.getElementById('tabla-servicios') || document.getElementById('servicios-section');
-    const btnVer = document.getElementById('btnVerServicio');
-    if (btnVer) {
-        btnVer.onclick = function () {
-            if (section) {
-                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        };
-    }
+    const modalElement = ensureServicioUnicoModal();
 
     if (window.bootstrap && window.bootstrap.Modal) {
-        window.bootstrap.Modal.getOrCreateInstance(document.getElementById('modalServicioUnico')).show();
+        window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
         return;
     }
 
@@ -1434,6 +1502,11 @@ function handleServicioBlocked(event) {
 }
 
 applyServicioRestriction();
+
+const servicioModalTrigger = document.getElementById('servicio-modal-trigger');
+if (servicioModalTrigger && servicioModalTrigger.dataset.servicioYaRegistrado === '1') {
+    showServicioUnicoModal();
+}
 
 btnAbrirServicio.on('click', function(event) {
     if (handleServicioBlocked(event)) {

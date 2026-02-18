@@ -1,4 +1,4 @@
-{% load custom_filters %}
+{% load custom_filters static %}
 <div class="pc-timeline mt-3">
   <div class="pc-timeline-header">
     <div>
@@ -311,17 +311,117 @@
       display: none;
     }
   }
+
+
+  /* ===== Modales modernos reutilizables ===== */
+  .modal-modern .modal-content {
+    border: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 16px 42px rgba(15, 23, 42, 0.2);
+  }
+
+  .modal-modern .modal-header {
+    border-bottom: 1px solid #e9edf3;
+    padding: 1rem 1.25rem;
+    background: #fff;
+  }
+
+  .modal-modern .modal-title {
+    font-weight: 700;
+    color: #1f2a44;
+  }
+
+  .modal-modern .modal-body {
+    padding: 1.5rem;
+    background: #fff;
+  }
+
+  .modal-modern .modal-footer {
+    border-top: 1px solid #eef2f7;
+    padding: 0.9rem 1.25rem 1.15rem;
+    background: #fff;
+  }
+
+  .modal-modern .modal-hero {
+    position: relative;
+    min-height: 84px;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    background: linear-gradient(140deg, #f6f8ff 0%, #edf2ff 55%, #f7f7ff 100%);
+    overflow: hidden;
+  }
+
+  .modal-modern .modal-hero-logo {
+    position: absolute;
+    inset: 0;
+    background-image: url('{% static "assets/images/logo/logo.png" %}');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.11;
+    pointer-events: none;
+  }
+
+  .modal-modern .form-label {
+    color: #334155;
+    font-weight: 600;
+    margin-bottom: .4rem;
+  }
+
+  .modal-modern .form-control,
+  .modal-modern .form-select {
+    border-radius: 10px;
+    border: 1px solid #d5deea;
+    padding-top: 0.62rem;
+    padding-bottom: 0.62rem;
+    box-shadow: none;
+  }
+
+  .modal-modern .form-control:focus,
+  .modal-modern .form-select:focus {
+    border-color: #7b61ff;
+    box-shadow: 0 0 0 .2rem rgba(123, 97, 255, 0.16);
+  }
+
+  .modal-modern .modal-footer .btn {
+    min-height: 40px;
+    border-radius: 10px;
+    padding: .5rem 1rem;
+    font-weight: 600;
+  }
+
+  .modal-modern .modal-footer .btn-primary {
+    background-color: #5b3cc4;
+    border-color: #5b3cc4;
+  }
+
+  .modal-modern .modal-footer .btn-primary:hover,
+  .modal-modern .modal-footer .btn-primary:focus {
+    background-color: #4c30af;
+    border-color: #4c30af;
+  }
+
+  .modal-modern .modal-footer .btn-secondary {
+    background-color: #eef2f7;
+    border-color: #d8e1eb;
+    color: #334155;
+  }
+
 </style>
 
 {% if es_admin_proceso %}
 <div class="modal fade" id="modalAsignarAnalista" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered modal-modern">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Asignar analista</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
+        <div class="modal-hero" aria-hidden="true">
+          <div class="modal-hero-logo"></div>
+        </div>
         <form id="formAsignarAnalista" data-url="{% url 'scompras:asignar_analista_solicitud' solicitud.id %}">
           {% csrf_token %}
           <div class="mb-3">
@@ -338,21 +438,26 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formAsignarAnalista" class="btn btn-primary">Guardar</button>
+        <div class="d-flex justify-content-end gap-2 w-100">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" form="formAsignarAnalista" class="btn btn-primary">Guardar</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="modal fade" id="modalAsignarTipo" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered modal-modern">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Asignar tipo de proceso</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
+        <div class="modal-hero" aria-hidden="true">
+          <div class="modal-hero-logo"></div>
+        </div>
         <form id="formAsignarTipo" data-url="{% url 'scompras:asignar_tipo_proceso_solicitud' solicitud.id %}">
           {% csrf_token %}
           <div class="mb-3">
@@ -380,8 +485,10 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formAsignarTipo" class="btn btn-primary">Guardar</button>
+        <div class="d-flex justify-content-end gap-2 w-100">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" form="formAsignarTipo" class="btn btn-primary">Guardar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -389,13 +496,16 @@
 {% endif %}
 
 <div class="modal fade" id="modalPaso" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered modal-modern">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="modalPasoTitulo">Actualizar paso</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
+        <div class="modal-hero" aria-hidden="true">
+          <div class="modal-hero-logo"></div>
+        </div>
         <form id="formPaso" data-url-template="{% url 'scompras:toggle_paso_solicitud' solicitud.id 0 %}">
           {% csrf_token %}
           <input type="hidden" name="paso_id" id="pasoIdInput">
@@ -410,8 +520,10 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" form="formPaso" class="btn btn-primary">Guardar</button>
+        <div class="d-flex justify-content-end gap-2 w-100">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" form="formPaso" class="btn btn-primary">Guardar</button>
+        </div>
       </div>
     </div>
   </div>
