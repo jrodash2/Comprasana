@@ -1,4 +1,5 @@
 {% load custom_filters static %}
+{% include 'components/modal_theme_upcv_styles.html' %}
 <div class="pc-timeline mt-3">
   <div class="pc-timeline-header">
     <div>
@@ -319,7 +320,7 @@
 {% if es_admin_proceso %}
 <div class="modal fade" id="modalAsignarAnalista" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-md">
-    <div class="modal-content dark-sign-up">
+    <div class="modal-content dark-sign-up modal-theme-upcv">
       <div class="modal-body social-profile text-start p-4">
         <div class="d-flex justify-content-end">
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -350,7 +351,7 @@
 
           <div class="modal-footer justify-content-center border-top-0 mt-4">
             <button type="submit" form="formAsignarAnalista" class="btn btn-primary px-4">Guardar</button>
-            <button type="button" class="btn" style="background-color:#0068ab;color:white;" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-cancel-upcv" data-bs-dismiss="modal">Cancelar</button>
           </div>
         </form>
       </div>
@@ -360,7 +361,7 @@
 
 <div class="modal fade" id="modalAsignarTipo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content dark-sign-up">
+    <div class="modal-content dark-sign-up modal-theme-upcv">
       <div class="modal-body social-profile text-start p-4">
         <div class="d-flex justify-content-end">
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -402,7 +403,7 @@
 
           <div class="modal-footer justify-content-center border-top-0 mt-4">
             <button type="submit" form="formAsignarTipo" class="btn btn-primary px-4">Guardar</button>
-            <button type="button" class="btn" style="background-color:#0068ab;color:white;" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-cancel-upcv" data-bs-dismiss="modal">Cancelar</button>
           </div>
         </form>
       </div>
@@ -413,7 +414,7 @@
 
 <div class="modal fade" id="modalPaso" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content dark-sign-up">
+    <div class="modal-content dark-sign-up modal-theme-upcv">
       <div class="modal-body social-profile text-start p-4">
         <div class="d-flex justify-content-end">
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -442,7 +443,7 @@
 
           <div class="modal-footer justify-content-center border-top-0 mt-4">
             <button type="submit" form="formPaso" class="btn btn-primary px-4">Guardar</button>
-            <button type="button" class="btn" style="background-color:#0068ab;color:white;" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-cancel-upcv" data-bs-dismiss="modal">Cancelar</button>
           </div>
         </form>
       </div>
