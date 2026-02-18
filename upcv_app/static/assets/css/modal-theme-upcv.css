@@ -1,0 +1,83 @@
+/* Tema global UPCV para modales Bootstrap.
+   Replica el estilo del modal "Editar - Información de la Solicitud" y se aplica
+   a cualquier modal que tenga la clase .modal-theme-upcv en .modal-content. */
+.modal-theme-upcv {
+  border: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.24);
+  background-image:
+    linear-gradient(145deg, rgba(246, 250, 255, 0.97) 0%, rgba(238, 244, 255, 0.96) 48%, rgba(255, 255, 255, 0.98) 100%),
+    url('../images/logo/logo.png');
+  background-repeat: no-repeat, no-repeat;
+  background-position: center center, center 56px;
+  background-size: cover, 118px;
+}
+
+.modal-theme-upcv .modal-header {
+  border-bottom: 1px solid rgba(26, 42, 73, 0.08);
+  background: transparent;
+}
+
+.modal-theme-upcv .modal-body {
+  background: transparent !important;
+  position: relative;
+}
+
+.modal-theme-upcv .title-wrapper p,
+.modal-theme-upcv .modal-title {
+  color: #44526c;
+}
+
+.modal-theme-upcv .form-label {
+  font-weight: 600;
+  color: #2b3a55;
+}
+
+.modal-theme-upcv .form-control,
+.modal-theme-upcv .form-select {
+  border-radius: 0.65rem;
+  min-height: 42px;
+  border-color: #d7dfeb;
+}
+
+.modal-theme-upcv .form-control:focus,
+.modal-theme-upcv .form-select:focus {
+  border-color: #6d4cc3;
+  box-shadow: 0 0 0 .2rem rgba(109, 76, 195, 0.16);
+}
+
+.modal-theme-upcv .modal-footer {
+  border-top: 0;
+  justify-content: center;
+  gap: .55rem;
+  background: transparent;
+}
+
+.modal-theme-upcv .modal-footer .btn {
+  min-height: 40px;
+}
+
+.modal-theme-upcv .btn-primary {
+  background-color: #5a3bbf;
+  border-color: #5a3bbf;
+}
+
+.modal-theme-upcv .btn-primary:hover,
+.modal-theme-upcv .btn-primary:focus {
+  background-color: #492fa3;
+  border-color: #492fa3;
+}
+
+.modal-theme-upcv .btn-cancel-upcv,
+.modal-theme-upcv .btn.btn-cancel-upcv {
+  background-color: #0068ab;
+  color: #fff;
+}
+
+.modal-theme-upcv .btn-cancel-upcv:hover,
+.modal-theme-upcv .btn-cancel-upcv:focus {
+  background-color: #05588f;
+  color: #fff;
+}
+

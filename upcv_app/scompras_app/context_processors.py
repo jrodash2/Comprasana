@@ -1,5 +1,6 @@
 # context_processors.py
 from .models import FraseMotivacional
+from .permissions import is_compras, is_presupuesto, can_manage_budget, can_manage_cdp
 import random
 
 def frase_del_dia(request):
@@ -24,6 +25,8 @@ def grupo_usuario(request):
         'es_departamento': request.user.groups.filter(name='Departamento').exists(),
         'es_administrador': request.user.groups.filter(name='Administrador').exists(),
         'es_scompras': request.user.groups.filter(name='scompras').exists(),
+        'es_presupuesto': is_presupuesto(request.user),
+        'es_compras': is_compras(request.user),
     }
 
 
@@ -80,17 +83,28 @@ def media_server_tickets(request):
     return {'MEDIA_SERVER_TICKETS': settings.MEDIA_SERVER_TICKETS}
 
 
-from .utils import is_admin, is_presupuesto
+from .utils import is_admin
 
 def permisos_configuracion(request):
     if not request.user.is_authenticated:
-        return {'es_admin': False, 'es_presupuesto': False, 'puede_ver_configuracion': False}
+        return {
+            'es_admin': False,
+            'es_presupuesto': False,
+            'es_compras': False,
+            'puede_ver_configuracion': False,
+            'can_manage_budget': False,
+            'can_manage_cdp': False,
+        }
 
     es_admin = request.user.groups.filter(name='Administrador').exists()
-    es_presupuesto = request.user.groups.filter(name='PRESUPUESTO').exists()  # ajustá al nombre real
+    es_presupuesto_usuario = is_presupuesto(request.user)
+    es_compras_usuario = is_compras(request.user)
 
     return {
         'es_admin': es_admin,
-        'es_presupuesto': es_presupuesto,
-        'puede_ver_configuracion': es_admin,  # solo admin
+        'es_presupuesto': es_presupuesto_usuario,
+        'es_compras': es_compras_usuario,
+        'puede_ver_configuracion': es_admin,
+        'can_manage_budget': can_manage_budget(request.user),
+        'can_manage_cdp': can_manage_cdp(request.user),
     }

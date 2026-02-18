@@ -4,15 +4,27 @@ from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 
+from .permissions import (
+    can_manage_cdp,
+    is_admin_group,
+    is_compras,
+    is_in_group,
+    is_presupuesto as is_presupuesto_group,
+)
+
 
 def is_admin(user):
     return user.is_authenticated and (
-        user.is_superuser or user.groups.filter(name="Administrador").exists()
+        user.is_superuser or is_admin_group(user)
     )
 
 
 def is_presupuesto(user):
-    return user.is_authenticated and user.groups.filter(name="PRESUPUESTO").exists()
+    return is_presupuesto_group(user)
+
+
+def is_compras_group(user):
+    return is_compras(user)
 
 
 def is_scompras(user):
@@ -24,20 +36,17 @@ def is_analista(user):
 
 
 def es_presupuesto(user):
-    return user.is_authenticated and user.groups.filter(name="PRESUPUESTO").exists()
+    return is_presupuesto_group(user)
 
 def puede_imprimir_cdp(user):
-    return user.is_authenticated and (
-        user.groups.filter(name="Administrador").exists()
-        or user.groups.filter(name="PRESUPUESTO").exists()
-    )
+    return user.is_authenticated and can_manage_cdp(user)
 
 
 def bloquear_presupuesto(view_func):
     """Bloquea acciones específicas para usuarios del grupo PRESUPUESTO."""
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        if es_presupuesto(request.user):
+        if es_presupuesto(request.user) or is_compras(request.user):
             if request.headers.get("x-requested-with") == "XMLHttpRequest" or request.method == "POST":
                 return JsonResponse({"success": False, "error": "No autorizado."}, status=403)
             return redirect(f"/no-autorizado/?next={request.path}")
@@ -100,6 +109,31 @@ def grupo_requerido(*nombres_grupos):
         return _wrapped_view
     return decorador
 
+
+
+
+def require_cdp_management(view_func):
+    """Restringe gestión de CDP/CDO a admin/superuser/PRESUPUESTO (no COMPRAS)."""
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not can_manage_cdp(request.user):
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"detail": "No autorizado."}, status=403)
+            return HttpResponseForbidden("No autorizado.")
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+def require_process_assignment_permission(view_func):
+    """Restringe asignación de analista/tipo de proceso a admin/superuser."""
+    from .permissions import can_assign_analyst_or_process
+
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not can_assign_analyst_or_process(request.user):
+            return JsonResponse({"detail": "No autorizado."}, status=403)
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 
 def cdps_sumables(qs):
     """Retorna solo CDP reservados para sumas consolidadas."""

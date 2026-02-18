@@ -55,6 +55,7 @@
 
 <link id="color" rel="stylesheet" href="{% static 'assets/css/color-1.css' %}" media="screen">
 
+<link rel="stylesheet" type="text/css" href="{% static 'assets/css/modal-theme-upcv.css' %}">
 <!-- Responsive css-->
 <link rel="stylesheet" type="text/css" href="{% static 'assets/css/responsive.css' %}">
 </head>
@@ -273,7 +274,7 @@
   {% include "scompras/partials/_menu_analista.html" %}
 
   {# Mostrar menú administrativo a Administrador/PRESUPUESTO #}
-  {% if es_admin or es_presupuesto %}
+  {% if es_admin or es_presupuesto or es_compras %}
     <li class="sidebar-list" ><i class="fa fa-thumb-tack"> </i><a class="sidebar-link " href="{% url 'scompras:dashboard_admin' %}">
                     <svg >
                       <use href="{% static 'assets/svg/icon-sprite.svg' %}#stroke-home"></use>

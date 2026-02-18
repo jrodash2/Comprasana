@@ -84,6 +84,12 @@ from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 import json
 from django.contrib.auth.models import Group
+from .permissions import (
+    can_assign_analyst_or_process,
+    can_manage_budget,
+    can_manage_cdp,
+    is_compras,
+)
 from .utils import (
     admin_only_config,
     bloquear_presupuesto,
@@ -99,6 +105,8 @@ from .utils import (
     recalcular_paso_actual,
     puede_imprimir_cdp,
     cdps_sumables,
+    require_cdp_management,
+    require_process_assignment_permission,
 )
 from .services.presupuesto_import import import_rows, read_rows
 from django.views.decorators.http import require_GET
@@ -304,7 +312,7 @@ def lista_departamentos(request):
     user = request.user
     grupos_usuario = list(user.groups.values_list('name', flat=True))
 
-    es_admin = is_admin(user) or is_presupuesto(user)
+    es_admin = is_admin(user) or is_presupuesto(user) or is_compras(user)
     es_departamento = 'Departamento' in grupos_usuario
     es_scompras = 'scompras' in grupos_usuario
 
@@ -341,8 +349,9 @@ def detalle_seccion(request, departamento_id, seccion_id):
     user = request.user
 
     grupos_usuario = list(user.groups.values_list('name', flat=True))
-    es_admin = is_admin(user) or is_presupuesto(user)
+    es_admin = is_admin(user) or is_presupuesto(user) or is_compras(user)
     es_presupuesto_usuario = es_presupuesto(user)
+    es_compras_usuario = is_compras(user)
     es_scompras = 'scompras' in grupos_usuario
 
     if not (es_admin or es_scompras):
@@ -381,6 +390,7 @@ def detalle_seccion(request, departamento_id, seccion_id):
         'todas_solicitudes': todas_solicitudes, 
         'secciones': secciones,
         'es_presupuesto': es_presupuesto_usuario,
+        'es_compras': es_compras_usuario,
     }
     return render(request, 'scompras/detalle_seccion.html', context)
 
@@ -389,6 +399,7 @@ def detalle_seccion(request, departamento_id, seccion_id):
 def detalle_seccion_usuario(request):
     user = request.user
     es_presupuesto_usuario = es_presupuesto(user)
+    es_compras_usuario = is_compras(user)
 
     # Validar si pertenece al grupo "scompras"
     if not user.groups.filter(name='scompras').exists():
@@ -431,6 +442,7 @@ def detalle_seccion_usuario(request):
         'todas_solicitudes': todas_solicitudes,
         'secciones': secciones,
         'es_presupuesto': es_presupuesto_usuario,
+        'es_compras': es_compras_usuario,
     }
 
     return render(request, 'scompras/detalle_seccion_usuario.html', context)
@@ -586,7 +598,7 @@ def presupuesto_anual_list(request):
             'presupuestos': presupuestos,
             # Simplify template conditions by passing a boolean flag instead of calling
             # queryset methods from the template engine.
-            'es_admin': is_admin(request.user) or is_presupuesto(request.user),
+            'es_admin': is_admin(request.user) or is_presupuesto(request.user) or is_compras(request.user),
         },
     )
 
@@ -617,7 +629,7 @@ def presupuesto_anual_crear(request):
 def presupuesto_anual_detalle(request, presupuesto_id):
     presupuesto = get_object_or_404(PresupuestoAnual.objects.prefetch_related('renglones'), pk=presupuesto_id)
     user = request.user
-    es_admin = is_admin(user) or is_presupuesto(user)
+    es_admin = is_admin(user) or is_presupuesto(user) or is_compras(user)
     renglones = presupuesto.renglones.select_related('producto', 'subproducto').all()
 
     if request.method == 'POST':
@@ -847,6 +859,7 @@ class SolicitudCompraDetailView(DetailView):
         user = self.request.user
         es_admin = is_admin(user)
         es_presupuesto_usuario = es_presupuesto(user)
+        es_compras_usuario = is_compras(user)
         es_scompras = is_scompras(user)
         es_analista_usuario = is_analista(user)
         estado_finalizada = solicitud.estado == 'Finalizada'
@@ -896,19 +909,19 @@ class SolicitudCompraDetailView(DetailView):
                 or Decimal('0.00'),
             }
 
-        usuario_puede_presupuesto = es_admin or es_presupuesto_usuario
+        usuario_puede_presupuesto = can_manage_budget(user)
 
         presupuesto_activo = PresupuestoAnual.presupuesto_activo()
         context['presupuesto_activo'] = presupuesto_activo
         context['puede_imprimir_cdp'] = puede_imprimir_cdp(user)
 
         context['puede_crear_cdp'] = (
-            usuario_puede_presupuesto
+            can_manage_cdp(user)
             and not context['tiene_cdo']
             and presupuesto_activo is not None
             and not estado_rechazada
         )
-        context['puede_gestionar_cdp'] = usuario_puede_presupuesto
+        context['puede_gestionar_cdp'] = can_manage_cdp(user)
         context['estado_finalizada'] = estado_finalizada
         context['estado_rechazada'] = estado_rechazada
         context['es_admin'] = es_admin or es_presupuesto_usuario
@@ -917,7 +930,7 @@ class SolicitudCompraDetailView(DetailView):
         context['es_analista'] = es_analista_usuario
         context['mostrar_acciones_solicitud'] = not (estado_finalizada or estado_rechazada)
         context['mostrar_liberar_todos'] = (
-            es_admin or es_presupuesto_usuario
+            can_manage_cdp(user)
             and not context['tiene_cdo']
             and context['cdps_reservados'].exists()
         )
@@ -928,13 +941,14 @@ class SolicitudCompraDetailView(DetailView):
             solicitud.estado == 'Creada' or estado_finalizada or estado_rechazada
         )
         puede_imprimir_solicitud_ui = estado_finalizada or estado_rechazada
-        if es_presupuesto_usuario:
+        if es_presupuesto_usuario or es_compras_usuario:
             puede_editar_solicitud_ui = False
             puede_finalizar_solicitud_ui = False
             puede_anular_solicitud_ui = False
             puede_imprimir_solicitud_ui = False
 
         context['es_presupuesto'] = es_presupuesto_usuario
+        context['es_compras'] = es_compras_usuario
         context['puede_editar_solicitud_ui'] = puede_editar_solicitud_ui
         context['puede_finalizar_solicitud_ui'] = puede_finalizar_solicitud_ui
         context['puede_anular_solicitud_ui'] = puede_anular_solicitud_ui
@@ -957,9 +971,8 @@ class SolicitudCompraDetailView(DetailView):
 
 @login_required
 @require_POST
+@require_process_assignment_permission
 def asignar_analista_solicitud(request, solicitud_id):
-    if not is_admin(request.user):
-        return JsonResponse({"detail": "No autorizado."}, status=403)
     solicitud = get_object_or_404(SolicitudCompra, pk=solicitud_id)
     analista_id = request.POST.get("analista_user_id")
     if not analista_id:
@@ -978,9 +991,8 @@ def asignar_analista_solicitud(request, solicitud_id):
 
 @login_required
 @require_POST
+@require_process_assignment_permission
 def asignar_tipo_proceso_solicitud(request, solicitud_id):
-    if not is_admin(request.user):
-        return JsonResponse({"detail": "No autorizado."}, status=403)
     solicitud = get_object_or_404(SolicitudCompra, pk=solicitud_id)
     tipo_id = request.POST.get("tipo_id")
     if not tipo_id:
@@ -1029,8 +1041,6 @@ def toggle_paso_solicitud(request, solicitud_id, paso_id):
 @login_required
 @require_POST
 def set_paso_actual_solicitud(request, solicitud_id):
-    if not is_admin(request.user):
-        return JsonResponse({"detail": "No autorizado."}, status=403)
     solicitud = get_object_or_404(SolicitudCompra, pk=solicitud_id)
     paso_actual = request.POST.get("paso_actual")
     if not paso_actual or not paso_actual.isdigit():
@@ -1063,8 +1073,6 @@ def tipos_proceso(request):
 @login_required
 @require_POST
 def crear_tipo_proceso(request):
-    if not is_admin(request.user):
-        return JsonResponse({"detail": "No autorizado."}, status=403)
     form = TipoProcesoCompraForm(request.POST)
     if form.is_valid():
         tipo = form.save()
@@ -1075,8 +1083,6 @@ def crear_tipo_proceso(request):
 @login_required
 @require_POST
 def editar_tipo_proceso(request, tipo_id):
-    if not is_admin(request.user):
-        return JsonResponse({"detail": "No autorizado."}, status=403)
     tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
     form = TipoProcesoCompraForm(request.POST, instance=tipo)
     if form.is_valid():
@@ -1088,8 +1094,6 @@ def editar_tipo_proceso(request, tipo_id):
 @login_required
 @require_POST
 def crear_subtipo_proceso(request):
-    if not is_admin(request.user):
-        return JsonResponse({"detail": "No autorizado."}, status=403)
     form = SubtipoProcesoCompraForm(request.POST)
     if form.is_valid():
         subtipo = form.save()
@@ -1125,8 +1129,6 @@ def pasos_tipo_proceso(request, tipo_id, subtipo_id=None):
 @login_required
 @require_POST
 def crear_paso_proceso(request, tipo_id):
-    if not is_admin(request.user):
-        return JsonResponse({"detail": "No autorizado."}, status=403)
     tipo = get_object_or_404(TipoProcesoCompra, pk=tipo_id)
     form = ProcesoCompraPasoForm(request.POST, tipo=tipo)
     if form.is_valid():
@@ -1138,8 +1140,6 @@ def crear_paso_proceso(request, tipo_id):
 @login_required
 @require_POST
 def editar_paso_proceso(request, paso_id):
-    if not is_admin(request.user):
-        return JsonResponse({"detail": "No autorizado."}, status=403)
     paso = get_object_or_404(ProcesoCompraPaso, pk=paso_id)
     form = ProcesoCompraPasoForm(request.POST, instance=paso, tipo=paso.tipo)
     if form.is_valid():
@@ -1512,6 +1512,7 @@ def analista_dashboard(request):
 
 @login_required
 @grupo_requerido('Administrador', 'PRESUPUESTO')
+@require_cdp_management
 def crear_cdp_solicitud(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCompra, pk=solicitud_id)
 
@@ -1554,6 +1555,7 @@ def crear_cdp_solicitud(request, solicitud_id):
 
 @login_required
 @grupo_requerido('Administrador', 'PRESUPUESTO')
+@require_cdp_management
 def ejecutar_cdp(request, cdp_id):
     cdp = get_object_or_404(
         CDP.objects.select_related('solicitud', 'renglon', 'renglon__presupuesto_anual'), pk=cdp_id
@@ -1596,6 +1598,7 @@ def ejecutar_cdp(request, cdp_id):
 
 @login_required
 @grupo_requerido('Administrador', 'PRESUPUESTO')
+@require_cdp_management
 def liberar_cdp(request, cdp_id):
     cdp = get_object_or_404(
         CDP.objects.select_related('solicitud', 'renglon', 'renglon__presupuesto_anual'), pk=cdp_id
@@ -1664,6 +1667,7 @@ def liberar_cdp(request, cdp_id):
 
 @login_required
 @grupo_requerido('Administrador', 'PRESUPUESTO')
+@require_cdp_management
 def liberar_cdps_solicitud(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCompra, pk=solicitud_id)
     presupuesto_activo = PresupuestoAnual.presupuesto_activo()
@@ -1808,7 +1812,7 @@ def _usuario_puede_editar(request):
     user = request.user
     if not user.is_authenticated:
         return False
-    return is_admin(user) or is_presupuesto(user) or user.groups.filter(name='scompras').exists()
+    return is_admin(user) or is_presupuesto(user) or is_compras(user) or user.groups.filter(name='scompras').exists()
 
 
 def _respuesta_sin_permiso(request, mensaje):
@@ -2047,11 +2051,12 @@ def detalle_solicitud(request, solicitud_id):
     estado_finalizada = solicitud.estado == 'Finalizada'
     estado_rechazada = solicitud.estado == 'Rechazada'
     es_presupuesto_usuario = es_presupuesto(request.user)
+    es_compras_usuario = is_compras(request.user)
     puede_editar_solicitud_ui = True
     puede_finalizar_solicitud_ui = not estado_finalizada and not estado_rechazada
     puede_anular_solicitud_ui = solicitud.estado == 'Creada' or estado_finalizada or estado_rechazada
     puede_imprimir_solicitud_ui = estado_finalizada or estado_rechazada
-    if es_presupuesto_usuario:
+    if es_presupuesto_usuario or es_compras_usuario:
         puede_editar_solicitud_ui = False
         puede_finalizar_solicitud_ui = False
         puede_anular_solicitud_ui = False
@@ -2065,6 +2070,7 @@ def detalle_solicitud(request, solicitud_id):
         'servicios': servicios,
         'puede_editar_caracteristica': solicitud.estado in ['Creada', 'Finalizada'],
         'es_presupuesto': es_presupuesto_usuario,
+        'es_compras': es_compras_usuario,
         'puede_editar_solicitud_ui': puede_editar_solicitud_ui,
         'puede_finalizar_solicitud_ui': puede_finalizar_solicitud_ui,
         'puede_anular_solicitud_ui': puede_anular_solicitud_ui,
@@ -2149,6 +2155,7 @@ def rechazar_solicitud(request):
                 request.user.is_superuser
                 or is_admin(request.user)
                 or is_presupuesto(request.user)
+                or is_compras(request.user)
                 or request.user.groups.filter(name='scompras').exists()
             ):
                 return JsonResponse({"success": False, "error": "No tiene permisos para rechazar la solicitud."}, status=403)
@@ -2366,7 +2373,7 @@ def generar_pdf_solicitud(request, solicitud_id):
 
 @login_required
 def generar_pdf_cdp(request, cdp_id):
-    if not puede_imprimir_cdp(request.user):
+    if not can_manage_cdp(request.user):
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             return JsonResponse({"detail": "No autorizado."}, status=403)
         return redirect(f"/no-autorizado/?next={request.get_full_path()}")
@@ -2680,7 +2687,7 @@ def detalle_departamento(request, pk):
     user = request.user
 
     # Verificar si es administrador
-    es_admin = is_admin(user) or is_presupuesto(user)
+    es_admin = is_admin(user) or is_presupuesto(user) or is_compras(user)
 
     # Si NO es admin, verificar si tiene asignado el departamento
     if not es_admin and not UsuarioDepartamento.objects.filter(usuario=user, departamento=departamento).exists():
