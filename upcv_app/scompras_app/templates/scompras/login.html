@@ -55,7 +55,7 @@
 </div>
 
             <div class="login-main"> 
-              <form action="{% url 'scompras:signin' %}" method="POST" class="theme-form">
+              <form action="/signin/" method="POST" class="theme-form">
                   {% csrf_token %}
                 <h4 >Iniciar Sesión </h4>
                 <p>Ingresa Usuario y Contraseña</p>
