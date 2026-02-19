@@ -94,12 +94,18 @@ from .utils import (
     is_presupuesto,
     is_scompras,
     is_analista,
+    is_compras,
+    is_admin_or_presupuesto_or_compras,
+    puede_ver_departamentos,
+    puede_ver_detalle_departamento,
+    puede_ver_detalle_solicitud,
     obtener_pasos_catalogo,
     inicializar_pasos_estado,
     recalcular_paso_actual,
     puede_imprimir_cdp,
     cdps_sumables,
 )
+from .permissions import group_required
 from .services.presupuesto_import import import_rows, read_rows
 from django.views.decorators.http import require_GET
 from django.db.models.functions import Coalesce
@@ -304,11 +310,14 @@ def lista_departamentos(request):
     user = request.user
     grupos_usuario = list(user.groups.values_list('name', flat=True))
 
-    es_admin = is_admin(user) or is_presupuesto(user)
+    es_admin = is_admin_or_presupuesto_or_compras(user)
+
+    if not puede_ver_departamentos(user):
+        return render(request, 'scompras/403.html', status=403)
     es_departamento = 'Departamento' in grupos_usuario
     es_scompras = 'scompras' in grupos_usuario
 
-    if es_admin:
+    if es_admin or is_compras(user):
         # Admin ve todo y tiene acceso completo
         departamentos = Departamento.objects.all()
         departamentos_usuario_ids = list(departamentos.values_list('id', flat=True))
@@ -834,6 +843,10 @@ class SolicitudCompraDetailView(DetailView):
 
     def dispatch(self, request, *args, **kwargs):
         solicitud = self.get_object()
+
+        if not puede_ver_detalle_solicitud(request.user):
+            return render(request, 'scompras/403.html', status=403)
+
         if is_analista(request.user) and not is_admin(request.user):
             if solicitud.analista_asignado_id != request.user.id:
                 return render(request, 'scompras/403.html', status=403)
@@ -1511,8 +1524,11 @@ def analista_dashboard(request):
 
 
 @login_required
-@grupo_requerido('Administrador', 'PRESUPUESTO')
+@group_required(['Administrador', 'PRESUPUESTO'])
 def crear_cdp_solicitud(request, solicitud_id):
+    if is_compras(request.user):
+        return render(request, 'scompras/403.html', status=403)
+
     solicitud = get_object_or_404(SolicitudCompra, pk=solicitud_id)
 
     presupuesto_activo = PresupuestoAnual.presupuesto_activo()
@@ -1553,8 +1569,11 @@ def crear_cdp_solicitud(request, solicitud_id):
 
 
 @login_required
-@grupo_requerido('Administrador', 'PRESUPUESTO')
+@group_required(['Administrador', 'PRESUPUESTO'])
 def ejecutar_cdp(request, cdp_id):
+    if is_compras(request.user):
+        return render(request, 'scompras/403.html', status=403)
+
     cdp = get_object_or_404(
         CDP.objects.select_related('solicitud', 'renglon', 'renglon__presupuesto_anual'), pk=cdp_id
     )
@@ -1595,8 +1614,11 @@ def ejecutar_cdp(request, cdp_id):
 
 
 @login_required
-@grupo_requerido('Administrador', 'PRESUPUESTO')
+@group_required(['Administrador', 'PRESUPUESTO'])
 def liberar_cdp(request, cdp_id):
+    if is_compras(request.user):
+        return render(request, 'scompras/403.html', status=403)
+
     cdp = get_object_or_404(
         CDP.objects.select_related('solicitud', 'renglon', 'renglon__presupuesto_anual'), pk=cdp_id
     )
@@ -1663,8 +1685,11 @@ def liberar_cdp(request, cdp_id):
 
 
 @login_required
-@grupo_requerido('Administrador', 'PRESUPUESTO')
+@group_required(['Administrador', 'PRESUPUESTO'])
 def liberar_cdps_solicitud(request, solicitud_id):
+    if is_compras(request.user):
+        return render(request, 'scompras/403.html', status=403)
+
     solicitud = get_object_or_404(SolicitudCompra, pk=solicitud_id)
     presupuesto_activo = PresupuestoAnual.presupuesto_activo()
 
@@ -2365,7 +2390,11 @@ def generar_pdf_solicitud(request, solicitud_id):
 
 
 @login_required
+@group_required(['Administrador', 'PRESUPUESTO'])
 def generar_pdf_cdp(request, cdp_id):
+    if is_compras(request.user):
+        return render(request, 'scompras/403.html', status=403)
+
     if not puede_imprimir_cdp(request.user):
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             return JsonResponse({"detail": "No autorizado."}, status=403)
@@ -2536,7 +2565,7 @@ import json
 
 
 @login_required
-@grupo_requerido('Administrador', 'PRESUPUESTO')
+@grupo_requerido('Administrador', 'PRESUPUESTO', 'COMPRAS')
 def dashboard_admin(request):
     """Dashboard consolidado para administradores con métricas institucionales."""
 
@@ -2679,11 +2708,11 @@ def detalle_departamento(request, pk):
     departamento = get_object_or_404(Departamento, pk=pk)
     user = request.user
 
-    # Verificar si es administrador
+    # Verificar si es administrador para acciones elevadas
     es_admin = is_admin(user) or is_presupuesto(user)
 
-    # Si NO es admin, verificar si tiene asignado el departamento
-    if not es_admin and not UsuarioDepartamento.objects.filter(usuario=user, departamento=departamento).exists():
+    # COMPRAS puede ver el detalle; usuarios de Departamento/scompras mantienen validación por asignación
+    if not puede_ver_detalle_departamento(user, departamento):
         return render(request, 'scompras/403.html', status=403)
 
     # Obtener todas las secciones del departamento
@@ -2735,45 +2764,41 @@ def signout(request):
     return redirect('scompras:signin')
 
 
-def signin(request):  
+def signin(request):
     institucion = Institucion.objects.first()
     if request.method == 'GET':
-        # Deberías instanciar el AuthenticationForm correctamente
         return render(request, 'scompras/login.html', {
             'form': AuthenticationForm(),
             'institucion': institucion,
         })
-    else:
-        # Se instancia AuthenticationForm con los datos del POST para mantener el estado
-        form = AuthenticationForm(request, data=request.POST)
-        
-        if form.is_valid():
-            # El método authenticate devuelve el usuario si es válido
-            user = form.get_user()
-            
-            # Si el usuario es encontrado, se inicia sesión
-            auth_login(request, user)
-            
-            # Ahora verificamos los grupos
-            for g in user.groups.all():
-                print(g.name)
-                if g.name in ['Administrador', 'PRESUPUESTO']:
-                    return redirect('scompras:dahsboard')
-                elif g.name == 'Departamento':
-                    return redirect('scompras:crear_requerimiento')
-                elif g.name == 'scompras':
-                    return redirect('scompras:dashboard_usuario')
-                elif g.name.lower() == 'analista':
-                    return redirect('scompras:analista_dashboard')
-            # Si no se encuentra el grupo adecuado, se redirige a una página por defecto
-            return redirect('scompras:signin')
-        else:
-            # Si el formulario no es válido, se retorna con el error
-            return render(request, 'scompras/login.html', {
-                'form': form,  # Pasamos el formulario con los errores
-                'error': 'Usuario o contraseña incorrectos',
-                'institucion': institucion,
-            })
+
+    form = AuthenticationForm(request, data=request.POST)
+    if form.is_valid():
+        user = form.get_user()
+        auth_login(request, user)
+
+        is_admin = user.groups.filter(name='Administrador').exists()
+        is_presupuesto = user.groups.filter(name='PRESUPUESTO').exists()
+        is_compras = user.groups.filter(name__iexact='COMPRAS').exists()
+        is_departamento = user.groups.filter(name='Departamento').exists()
+        is_scompras_user = user.groups.filter(name='scompras').exists()
+        is_analista_user = user.groups.filter(name__iexact='analista').exists()
+
+        if is_admin or is_presupuesto or is_compras:
+            return redirect('scompras:dahsboard')
+        if is_departamento:
+            return redirect('scompras:crear_requerimiento')
+        if is_scompras_user:
+            return redirect('scompras:dashboard_usuario')
+        if is_analista_user:
+            return redirect('scompras:analista_dashboard')
+        return redirect('scompras:signin')
+
+    return render(request, 'scompras/login.html', {
+        'form': form,
+        'error': 'Usuario o contraseña incorrectos',
+        'institucion': institucion,
+    })
 
 
 
