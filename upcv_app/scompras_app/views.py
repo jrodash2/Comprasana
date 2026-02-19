@@ -94,6 +94,8 @@ from .utils import (
     is_presupuesto,
     is_scompras,
     is_analista,
+    is_compras,
+    is_admin_or_presupuesto_or_compras,
     obtener_pasos_catalogo,
     inicializar_pasos_estado,
     recalcular_paso_actual,
@@ -305,7 +307,7 @@ def lista_departamentos(request):
     user = request.user
     grupos_usuario = list(user.groups.values_list('name', flat=True))
 
-    es_admin = is_admin(user) or is_presupuesto(user)
+    es_admin = is_admin_or_presupuesto_or_compras(user)
     es_departamento = 'Departamento' in grupos_usuario
     es_scompras = 'scompras' in grupos_usuario
 
@@ -2538,7 +2540,7 @@ import json
 
 
 @login_required
-@grupo_requerido('Administrador', 'PRESUPUESTO')
+@grupo_requerido('Administrador', 'PRESUPUESTO', 'COMPRAS')
 def dashboard_admin(request):
     """Dashboard consolidado para administradores con métricas institucionales."""
 
@@ -2752,7 +2754,7 @@ def signin(request):
 
         is_admin = user.groups.filter(name='Administrador').exists()
         is_presupuesto = user.groups.filter(name='PRESUPUESTO').exists()
-        is_compras = user.groups.filter(name='COMPRAS').exists()
+        is_compras = user.groups.filter(name__iexact='COMPRAS').exists()
         is_departamento = user.groups.filter(name='Departamento').exists()
         is_scompras_user = user.groups.filter(name='scompras').exists()
         is_analista_user = user.groups.filter(name__iexact='analista').exists()
