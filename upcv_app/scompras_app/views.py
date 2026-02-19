@@ -96,6 +96,9 @@ from .utils import (
     is_analista,
     is_compras,
     is_admin_or_presupuesto_or_compras,
+    puede_ver_departamentos,
+    puede_ver_detalle_departamento,
+    puede_ver_detalle_solicitud,
     obtener_pasos_catalogo,
     inicializar_pasos_estado,
     recalcular_paso_actual,
@@ -308,10 +311,13 @@ def lista_departamentos(request):
     grupos_usuario = list(user.groups.values_list('name', flat=True))
 
     es_admin = is_admin_or_presupuesto_or_compras(user)
+
+    if not puede_ver_departamentos(user):
+        return render(request, 'scompras/403.html', status=403)
     es_departamento = 'Departamento' in grupos_usuario
     es_scompras = 'scompras' in grupos_usuario
 
-    if es_admin:
+    if es_admin or is_compras(user):
         # Admin ve todo y tiene acceso completo
         departamentos = Departamento.objects.all()
         departamentos_usuario_ids = list(departamentos.values_list('id', flat=True))
@@ -837,6 +843,10 @@ class SolicitudCompraDetailView(DetailView):
 
     def dispatch(self, request, *args, **kwargs):
         solicitud = self.get_object()
+
+        if not puede_ver_detalle_solicitud(request.user):
+            return render(request, 'scompras/403.html', status=403)
+
         if is_analista(request.user) and not is_admin(request.user):
             if solicitud.analista_asignado_id != request.user.id:
                 return render(request, 'scompras/403.html', status=403)
@@ -1516,6 +1526,9 @@ def analista_dashboard(request):
 @login_required
 @group_required(['Administrador', 'PRESUPUESTO'])
 def crear_cdp_solicitud(request, solicitud_id):
+    if is_compras(request.user):
+        return render(request, 'scompras/403.html', status=403)
+
     solicitud = get_object_or_404(SolicitudCompra, pk=solicitud_id)
 
     presupuesto_activo = PresupuestoAnual.presupuesto_activo()
@@ -1558,6 +1571,9 @@ def crear_cdp_solicitud(request, solicitud_id):
 @login_required
 @group_required(['Administrador', 'PRESUPUESTO'])
 def ejecutar_cdp(request, cdp_id):
+    if is_compras(request.user):
+        return render(request, 'scompras/403.html', status=403)
+
     cdp = get_object_or_404(
         CDP.objects.select_related('solicitud', 'renglon', 'renglon__presupuesto_anual'), pk=cdp_id
     )
@@ -1600,6 +1616,9 @@ def ejecutar_cdp(request, cdp_id):
 @login_required
 @group_required(['Administrador', 'PRESUPUESTO'])
 def liberar_cdp(request, cdp_id):
+    if is_compras(request.user):
+        return render(request, 'scompras/403.html', status=403)
+
     cdp = get_object_or_404(
         CDP.objects.select_related('solicitud', 'renglon', 'renglon__presupuesto_anual'), pk=cdp_id
     )
@@ -1668,6 +1687,9 @@ def liberar_cdp(request, cdp_id):
 @login_required
 @group_required(['Administrador', 'PRESUPUESTO'])
 def liberar_cdps_solicitud(request, solicitud_id):
+    if is_compras(request.user):
+        return render(request, 'scompras/403.html', status=403)
+
     solicitud = get_object_or_404(SolicitudCompra, pk=solicitud_id)
     presupuesto_activo = PresupuestoAnual.presupuesto_activo()
 
@@ -2370,6 +2392,9 @@ def generar_pdf_solicitud(request, solicitud_id):
 @login_required
 @group_required(['Administrador', 'PRESUPUESTO'])
 def generar_pdf_cdp(request, cdp_id):
+    if is_compras(request.user):
+        return render(request, 'scompras/403.html', status=403)
+
     if not puede_imprimir_cdp(request.user):
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             return JsonResponse({"detail": "No autorizado."}, status=403)
@@ -2683,11 +2708,11 @@ def detalle_departamento(request, pk):
     departamento = get_object_or_404(Departamento, pk=pk)
     user = request.user
 
-    # Verificar si es administrador
+    # Verificar si es administrador para acciones elevadas
     es_admin = is_admin(user) or is_presupuesto(user)
 
-    # Si NO es admin, verificar si tiene asignado el departamento
-    if not es_admin and not UsuarioDepartamento.objects.filter(usuario=user, departamento=departamento).exists():
+    # COMPRAS puede ver el detalle; usuarios de Departamento/scompras mantienen validación por asignación
+    if not puede_ver_detalle_departamento(user, departamento):
         return render(request, 'scompras/403.html', status=403)
 
     # Obtener todas las secciones del departamento
