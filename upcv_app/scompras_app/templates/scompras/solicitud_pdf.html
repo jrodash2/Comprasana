@@ -311,10 +311,9 @@
     Por este medio se solicita al Departamento Administrativo Financiero se sirva efectuar la compra de lo que a continuación se detalla:
   </p>
 {% comment %}
-  Unificación pedida: los INSUMOS con característica especial (filas_layout_esp con codigo_insumo)
-  se imprimen dentro de esta primera tabla usando la columna "Caract. Especial".
+  Solo mostrar esta sección si hay insumos en filas_layout_car.
 {% endcomment %}
-{% if filas_layout_car or filas_layout_esp %}
+{% if filas_layout_car %}
   <div class="section-title">Detalle de insumos (predomina Características)</div>
   <table class="table">
     <colgroup>
