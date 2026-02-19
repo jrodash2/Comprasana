@@ -63,6 +63,12 @@
   ❌ Anular Solicitud
 </button>
 {% elif solicitud.estado == 'Finalizada' or solicitud.estado == 'Rechazada' %}
+<button type="button" class="btn btn-light btn-sm"
+        data-bs-toggle="modal"
+        data-bs-target="#modalEditarSolicitud"
+        style="margin-top: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;">
+  ✏️ Editar Solicitud
+</button>
 <button id="btnVerPDF" type="button" 
         class="btn btn-sm"
         style="margin-top: 10px; margin-left: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;"
