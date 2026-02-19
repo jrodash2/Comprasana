@@ -43,7 +43,6 @@
                 <tr>
                   <td style="padding: 30px 0px 30px 30px;">
                     <img src="{% static 'assets/images/logo/logo.png' %}" alt="logo">
-{% with es_presupuesto=request.user.groups.filter(name='PRESUPUESTO').exists %}
 {% if not es_presupuesto %}
 {% if es_scompras %}
 {% if not is_analista %}
@@ -526,8 +525,7 @@
                     —
                   {% endif %}
                 {% endif %}
-              {% endwith %}
-            {% else %}
+                          {% else %}
               {% with nombre_servicio=servicio.servicio.concepto %}
                 {% if puede_editar_caracteristica %}
                   <span class="editable-servicio-nombre"
@@ -562,8 +560,7 @@
                     —
                   {% endif %}
                 {% endif %}
-              {% endwith %}
-            {% endif %}
+                          {% endif %}
           </td>
           <td style="font-size:10px;">—</td>
           <td style="font-size:10px;">
@@ -582,8 +579,7 @@
               {% else %}
                 {{ valor_caracteristica|default:"-" }}
               {% endif %}
-            {% endwith %}
-          </td>
+                      </td>
           <td style="font-size:10px;">{{ servicio.servicio.unidad_medida|default:"" }}</td>
           <td style="font-size:10px;">0</td>
           <td style="font-size:10px;">—</td>
