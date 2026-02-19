@@ -43,6 +43,35 @@
                 <tr>
                   <td style="padding: 30px 0px 30px 30px;">
                     <img src="{% static 'assets/images/logo/logo.png' %}" alt="logo">
+{% if es_scompras %}
+{% if not is_analista %}
+{% if solicitud.estado == 'Creada' %}
+<button type="button" class="btn btn-light btn-sm"
+        data-bs-toggle="modal"
+        data-bs-target="#modalEditarSolicitud"
+        style="margin-top: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;">
+  ✏️ Editar Solicitud
+</button>
+<button type="button" id="btnFinalizarSolicitud"
+        class="btn btn-sm"
+        style="margin-top: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;">
+  ✅ Finalizar Solicitud
+</button>
+<button id="btnRechazar" type="button"
+        class="btn btn-sm"
+        style="margin-top: 10px; margin-left: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;">
+  ❌ Anular Solicitud
+</button>
+{% elif solicitud.estado == 'Finalizada' or solicitud.estado == 'Rechazada' %}
+<button id="btnVerPDF" type="button" 
+        class="btn btn-sm"
+        style="margin-top: 10px; margin-left: 10px; background-color: #ffffff; color: #0068ab; font-weight: 600; border: none; border-radius: 5px; padding: 6px 12px; cursor:pointer;"
+        onclick="window.open('{% url 'scompras:generar_pdf_solicitud' solicitud.id %}', '_blank')">
+  🖨️ Imprimir Solicitud
+</button>
+{% endif %}
+{% endif %}
+{% else %}
 {% if can_edit_top_actions and mostrar_acciones_solicitud and not is_analista %}
 <!-- Botón Editar -->
 {% if puede_editar_solicitud_ui %}
@@ -103,6 +132,7 @@
     {% endif %}
   {% endif %}
   {% endif %}
+{% endif %}
 {% endif %}
 
 
