@@ -2718,8 +2718,8 @@ def detalle_departamento(request, pk):
     # Obtener todas las secciones del departamento
     secciones_departamento = Seccion.objects.filter(departamento=departamento)
 
-    # Si es admin, tiene acceso a todas las secciones
-    if es_admin:
+    # Si es admin o COMPRAS, tiene acceso a todas las secciones (solo lectura en UI)
+    if es_admin or is_compras(user):
         secciones_usuario_ids = list(secciones_departamento.values_list('id', flat=True))
     else:
         # Filtrar secciones según permisos
