@@ -74,7 +74,8 @@
 {% endif %}
 
 <!-- Botón Ver PDF (Solo cuando el estado es "Finalizada" o "Rechazada") -->
-{% if can_edit_top_actions and (solicitud.estado == 'Finalizada' or solicitud.estado == 'Rechazada') %}
+{% if can_edit_top_actions %}
+  {% if solicitud.estado == 'Finalizada' or solicitud.estado == 'Rechazada' %}
   {% if not is_analista %}
     <!-- Botón Editar -->
     {% if puede_editar_solicitud_ui %}
@@ -100,6 +101,7 @@
       ❌ Anular Solicitud
     </button>
     {% endif %}
+  {% endif %}
   {% endif %}
 {% endif %}
 
