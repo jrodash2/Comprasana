@@ -314,7 +314,7 @@
   Solo mostrar esta sección si hay insumos en filas_layout_car.
 {% endcomment %}
 {% if filas_layout_car %}
-  <div class="section-title">Detalle de insumos (predomina Características)</div>
+
   <table class="table">
     <colgroup>
       <col class="w-cant" />
@@ -380,7 +380,7 @@
 {% endcomment %}
 {% with ultima_fila_esp=filas_layout_esp|last %}
 {% if filas_layout_esp and ultima_fila_esp.codigo_insumo == "-" %}
-  <div class="section-title">Detalle de ítems con característica especial</div>
+
   <table class="table">
     <colgroup>
       <col class="w-cant" />
