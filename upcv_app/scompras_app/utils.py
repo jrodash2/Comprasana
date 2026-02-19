@@ -23,6 +23,14 @@ def is_analista(user):
     return user.is_authenticated and user.groups.filter(name__iexact="analista").exists()
 
 
+def is_compras(user):
+    return user.is_authenticated and user.groups.filter(name__iexact="COMPRAS").exists()
+
+
+def is_admin_or_presupuesto_or_compras(user):
+    return is_admin(user) or is_presupuesto(user) or is_compras(user)
+
+
 def es_presupuesto(user):
     return user.is_authenticated and user.groups.filter(name="PRESUPUESTO").exists()
 
