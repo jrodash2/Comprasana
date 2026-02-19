@@ -353,8 +353,9 @@ def detalle_seccion(request, departamento_id, seccion_id):
     es_admin = is_admin(user) or is_presupuesto(user)
     es_presupuesto_usuario = es_presupuesto(user)
     es_scompras = 'scompras' in grupos_usuario
+    es_compras_usuario = is_compras(user)
 
-    if not (es_admin or es_scompras):
+    if not (es_admin or es_scompras or es_compras_usuario):
         tiene_acceso = UsuarioDepartamento.objects.filter(
             usuario=user,
             departamento=seccion.departamento,
@@ -362,6 +363,10 @@ def detalle_seccion(request, departamento_id, seccion_id):
         ).exists()
         if not tiene_acceso:
             return render(request, 'scompras/403.html', status=403)
+
+    # COMPRAS solo lectura en detalle de sección
+    if request.method != 'GET' and es_compras_usuario:
+        return render(request, 'scompras/403.html', status=403)
 
     # Manejo del formulario
     if request.method == 'POST':
