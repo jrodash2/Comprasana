@@ -11,7 +11,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import Group, User
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 import openpyxl
 from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
@@ -2646,7 +2646,7 @@ from django.db.models.functions import ExtractYear, ExtractMonth
 from datetime import date
 
 @login_required
-@grupo_requerido('scompras')
+@grupo_requerido('scompras', 'COMPRAS')
 def dashboard_scompras(request):
     """Dashboard operativo para usuarios de compras sin mostrar cifras presupuestarias."""
 
@@ -2745,42 +2745,72 @@ def signout(request):
 def signin(request):  
     institucion = Institucion.objects.first()
     if request.method == 'GET':
-        # Deberías instanciar el AuthenticationForm correctamente
         return render(request, 'scompras/login.html', {
             'form': AuthenticationForm(),
             'institucion': institucion,
         })
-    else:
-        # Se instancia AuthenticationForm con los datos del POST para mantener el estado
-        form = AuthenticationForm(request, data=request.POST)
-        
-        if form.is_valid():
-            # El método authenticate devuelve el usuario si es válido
-            user = form.get_user()
-            
-            # Si el usuario es encontrado, se inicia sesión
-            auth_login(request, user)
-            
-            # Ahora verificamos los grupos
-            for g in user.groups.all():
-                print(g.name)
-                if g.name in ['Administrador', 'PRESUPUESTO']:
-                    return redirect('scompras:dahsboard')
-                elif g.name == 'Departamento':
-                    return redirect('scompras:crear_requerimiento')
-                elif g.name == 'scompras':
-                    return redirect('scompras:dashboard_usuario')
-                elif g.name.lower() == 'analista':
-                    return redirect('scompras:analista_dashboard')
-            # Si no se encuentra el grupo adecuado, se redirige a una página por defecto
-            return redirect('scompras:signin')
-        else:
-            # Si el formulario no es válido, se retorna con el error
-            return render(request, 'scompras/login.html', {
-                'form': form,  # Pasamos el formulario con los errores
-                'error': 'Usuario o contraseña incorrectos',
-                'institucion': institucion,
-            })
+
+    form = AuthenticationForm(request, data=request.POST)
+    if not form.is_valid():
+        return render(request, 'scompras/login.html', {
+            'form': form,
+            'error': 'Usuario o contraseña incorrectos',
+            'institucion': institucion,
+        })
+
+    user = form.get_user()
+    auth_login(request, user)
+
+    raw_groups = list(user.groups.values_list('name', flat=True))
+    groups_ci = {group_name.strip().lower() for group_name in raw_groups}
+
+    logger.info(
+        "signin exitoso: user_id=%s username=%s is_active=%s groups=%s",
+        user.id,
+        user.username,
+        user.is_active,
+        raw_groups,
+    )
+
+    redirection_by_priority = [
+        ('administrador', 'scompras:dashboard_admin'),
+        ('presupuesto', 'scompras:dashboard_admin'),
+        ('departamento', 'scompras:crear_requerimiento'),
+        ('analista', 'scompras:analista_dashboard'),
+        ('scompras', 'scompras:dashboard_usuario'),
+        ('compras', 'scompras:dashboard_usuario'),
+    ]
+
+    for group_name, target_url_name in redirection_by_priority:
+        if group_name not in groups_ci:
+            continue
+
+        try:
+            reverse(target_url_name)
+        except NoReverseMatch:
+            logger.warning(
+                "ruta no encontrada en signin: user_id=%s group=%s target=%s",
+                user.id,
+                group_name,
+                target_url_name,
+            )
+            continue
+
+        logger.info(
+            "redirigiendo por grupo: user_id=%s group=%s target=%s",
+            user.id,
+            group_name,
+            target_url_name,
+        )
+        return redirect(target_url_name)
+
+    logger.warning(
+        "usuario sin grupo/ruta mapeada en signin: user_id=%s username=%s groups=%s",
+        user.id,
+        user.username,
+        raw_groups,
+    )
+    return redirect('scompras:dashboard_usuario')
 
 
 
