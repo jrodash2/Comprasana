@@ -99,6 +99,8 @@ from .utils import (
     puede_ver_departamentos,
     puede_ver_detalle_departamento,
     puede_ver_detalle_solicitud,
+    puede_asignar_proceso,
+    puede_editar_solicitud,
     obtener_pasos_catalogo,
     inicializar_pasos_estado,
     recalcular_paso_actual,
@@ -930,7 +932,9 @@ class SolicitudCompraDetailView(DetailView):
         context['estado_finalizada'] = estado_finalizada
         context['estado_rechazada'] = estado_rechazada
         context['es_admin'] = es_admin or es_presupuesto_usuario
-        context['es_admin_proceso'] = es_admin
+        can_assign_proceso = puede_asignar_proceso(user)
+        context['can_assign_proceso'] = can_assign_proceso
+        context['es_admin_proceso'] = can_assign_proceso
         context['es_scompras'] = es_scompras
         context['es_analista'] = es_analista_usuario
         context['mostrar_acciones_solicitud'] = not (estado_finalizada or estado_rechazada)
@@ -940,17 +944,15 @@ class SolicitudCompraDetailView(DetailView):
             and context['cdps_reservados'].exists()
         )
         context['puede_editar_caracteristica'] = solicitud.estado in ['Creada', 'Finalizada']
-        puede_editar_solicitud_ui = True
-        puede_finalizar_solicitud_ui = not estado_finalizada and not estado_rechazada
-        puede_anular_solicitud_ui = (
+        can_edit_top_actions = puede_editar_solicitud(user) and not is_compras(user)
+        context['can_edit_top_actions'] = can_edit_top_actions
+
+        puede_editar_solicitud_ui = can_edit_top_actions
+        puede_finalizar_solicitud_ui = can_edit_top_actions and not estado_finalizada and not estado_rechazada
+        puede_anular_solicitud_ui = can_edit_top_actions and (
             solicitud.estado == 'Creada' or estado_finalizada or estado_rechazada
         )
-        puede_imprimir_solicitud_ui = estado_finalizada or estado_rechazada
-        if es_presupuesto_usuario:
-            puede_editar_solicitud_ui = False
-            puede_finalizar_solicitud_ui = False
-            puede_anular_solicitud_ui = False
-            puede_imprimir_solicitud_ui = False
+        puede_imprimir_solicitud_ui = can_edit_top_actions and (estado_finalizada or estado_rechazada)
 
         context['es_presupuesto'] = es_presupuesto_usuario
         context['puede_editar_solicitud_ui'] = puede_editar_solicitud_ui
@@ -976,8 +978,8 @@ class SolicitudCompraDetailView(DetailView):
 @login_required
 @require_POST
 def asignar_analista_solicitud(request, solicitud_id):
-    if not is_admin(request.user):
-        return JsonResponse({"detail": "No autorizado."}, status=403)
+    if not (is_admin(request.user) or is_compras(request.user)):
+        return JsonResponse({"detail": "Sin permisos"}, status=403)
     solicitud = get_object_or_404(SolicitudCompra, pk=solicitud_id)
     analista_id = request.POST.get("analista_user_id")
     if not analista_id:
@@ -997,8 +999,8 @@ def asignar_analista_solicitud(request, solicitud_id):
 @login_required
 @require_POST
 def asignar_tipo_proceso_solicitud(request, solicitud_id):
-    if not is_admin(request.user):
-        return JsonResponse({"detail": "No autorizado."}, status=403)
+    if not (is_admin(request.user) or is_compras(request.user)):
+        return JsonResponse({"detail": "Sin permisos"}, status=403)
     solicitud = get_object_or_404(SolicitudCompra, pk=solicitud_id)
     tipo_id = request.POST.get("tipo_id")
     if not tipo_id:
@@ -2077,15 +2079,11 @@ def detalle_solicitud(request, solicitud_id):
     estado_finalizada = solicitud.estado == 'Finalizada'
     estado_rechazada = solicitud.estado == 'Rechazada'
     es_presupuesto_usuario = es_presupuesto(request.user)
-    puede_editar_solicitud_ui = True
-    puede_finalizar_solicitud_ui = not estado_finalizada and not estado_rechazada
-    puede_anular_solicitud_ui = solicitud.estado == 'Creada' or estado_finalizada or estado_rechazada
-    puede_imprimir_solicitud_ui = estado_finalizada or estado_rechazada
-    if es_presupuesto_usuario:
-        puede_editar_solicitud_ui = False
-        puede_finalizar_solicitud_ui = False
-        puede_anular_solicitud_ui = False
-        puede_imprimir_solicitud_ui = False
+    can_edit_top_actions = puede_editar_solicitud(request.user) and not is_compras(request.user)
+    puede_editar_solicitud_ui = can_edit_top_actions
+    puede_finalizar_solicitud_ui = can_edit_top_actions and not estado_finalizada and not estado_rechazada
+    puede_anular_solicitud_ui = can_edit_top_actions and (solicitud.estado == 'Creada' or estado_finalizada or estado_rechazada)
+    puede_imprimir_solicitud_ui = can_edit_top_actions and (estado_finalizada or estado_rechazada)
 
     return render(request, 'scompras/detalle_solicitud.html', {
         'solicitud': solicitud,
@@ -2095,6 +2093,8 @@ def detalle_solicitud(request, solicitud_id):
         'servicios': servicios,
         'puede_editar_caracteristica': solicitud.estado in ['Creada', 'Finalizada'],
         'es_presupuesto': es_presupuesto_usuario,
+        'can_edit_top_actions': can_edit_top_actions,
+        'can_assign_proceso': puede_asignar_proceso(request.user),
         'puede_editar_solicitud_ui': puede_editar_solicitud_ui,
         'puede_finalizar_solicitud_ui': puede_finalizar_solicitud_ui,
         'puede_anular_solicitud_ui': puede_anular_solicitud_ui,

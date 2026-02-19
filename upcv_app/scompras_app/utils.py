@@ -31,6 +31,13 @@ def is_admin_or_presupuesto_or_compras(user):
     return is_admin(user) or is_presupuesto(user) or is_compras(user)
 
 
+def puede_asignar_proceso(user):
+    return is_admin(user) or is_compras(user)
+
+
+def puede_editar_solicitud(user):
+    return is_admin(user) or is_presupuesto(user)
+
 
 
 def puede_ver_departamentos(user):
