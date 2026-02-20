@@ -525,8 +525,7 @@
                     —
                   {% endif %}
                 {% endif %}
-              {% endwith %}
-            {% else %}
+                          {% else %}
               {% with nombre_servicio=servicio.servicio.concepto %}
                 {% if puede_editar_caracteristica %}
                   <span class="editable-servicio-nombre"
@@ -561,8 +560,7 @@
                     —
                   {% endif %}
                 {% endif %}
-              {% endwith %}
-            {% endif %}
+                          {% endif %}
           </td>
           <td style="font-size:10px;">—</td>
           <td style="font-size:10px;">
@@ -581,8 +579,7 @@
               {% else %}
                 {{ valor_caracteristica|default:"-" }}
               {% endif %}
-            {% endwith %}
-          </td>
+                      </td>
           <td style="font-size:10px;">{{ servicio.servicio.unidad_medida|default:"" }}</td>
           <td style="font-size:10px;">0</td>
           <td style="font-size:10px;">—</td>
