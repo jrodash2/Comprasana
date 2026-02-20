@@ -43,6 +43,7 @@
                 <tr>
                   <td style="padding: 30px 0px 30px 30px;">
                     <img src="{% static 'assets/images/logo/logo.png' %}" alt="logo">
+{% if not es_presupuesto %}
 {% if es_scompras %}
 {% if not is_analista %}
 {% if solicitud.estado == 'Creada' %}
@@ -138,6 +139,7 @@
     {% endif %}
   {% endif %}
   {% endif %}
+{% endif %}
 {% endif %}
 {% endif %}
 
