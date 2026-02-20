@@ -316,7 +316,6 @@
   2) Si no hay servicios y hay insumos, mostrar solo insumos.
   3) Si no hay nada, mostrar mensaje vacío.
 {% endcomment %}
-{% with ultima_fila_esp=filas_layout_esp|last %}
 {% if filas_layout_car or filas_layout_esp %}
 
   <table class="table">
@@ -386,7 +385,6 @@
     </tbody>
   </table>
 {% endif %}
-{% endwith %}
 
 {% if anexos_texto %}
 <div class="anexos">
