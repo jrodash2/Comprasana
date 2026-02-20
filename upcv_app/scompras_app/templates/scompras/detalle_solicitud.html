@@ -490,7 +490,7 @@
           <td style="font-size:10px;">{{ servicio.servicio.renglon|default:"" }}</td>
           <td style="font-size:10px;">—</td>
           <td style="font-size:10px;">
-            {% with nombre_servicio=servicio.nombre_override|default_if_none:servicio.servicio.concepto %}
+            {% if servicio.nombre_override != None %}
               {% if puede_editar_caracteristica %}
                 <span class="editable-servicio-nombre"
                       style="cursor:pointer;"
@@ -498,10 +498,10 @@
                       data-bs-placement="top"
                       title="Clic para editar"
                       data-id="{{ servicio.id }}"
-                      data-valor="{{ nombre_servicio|default_if_none:''|escapejs }}">
-                  {% if nombre_servicio %}
+                      data-valor="{{ servicio.nombre_override|default_if_none:''|escapejs }}">
+                  {% if servicio.nombre_override %}
                     <ul style="margin:0; padding-left:18px; font-size:10px;">
-                      {% for linea in nombre_servicio.splitlines %}
+                      {% for linea in servicio.nombre_override.splitlines %}
                         {% if linea.strip %}
                           <li>{{ linea }}</li>
                         {% endif %}
@@ -512,9 +512,9 @@
                   {% endif %}
                 </span>
               {% else %}
-                {% if nombre_servicio %}
+                {% if servicio.nombre_override %}
                   <ul style="margin:0; padding-left:18px; font-size:10px;">
-                    {% for linea in nombre_servicio.splitlines %}
+                    {% for linea in servicio.nombre_override.splitlines %}
                       {% if linea.strip %}
                         <li>{{ linea }}</li>
                       {% endif %}
@@ -524,11 +524,45 @@
                   —
                 {% endif %}
               {% endif %}
-            {% endwith %}
+            {% else %}
+              {% if puede_editar_caracteristica %}
+                <span class="editable-servicio-nombre"
+                      style="cursor:pointer;"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Clic para editar"
+                      data-id="{{ servicio.id }}"
+                      data-valor="{{ servicio.servicio.concepto|default_if_none:''|escapejs }}">
+                  {% if servicio.servicio.concepto %}
+                    <ul style="margin:0; padding-left:18px; font-size:10px;">
+                      {% for linea in servicio.servicio.concepto.splitlines %}
+                        {% if linea.strip %}
+                          <li>{{ linea }}</li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    —
+                  {% endif %}
+                </span>
+              {% else %}
+                {% if servicio.servicio.concepto %}
+                  <ul style="margin:0; padding-left:18px; font-size:10px;">
+                    {% for linea in servicio.servicio.concepto.splitlines %}
+                      {% if linea.strip %}
+                        <li>{{ linea }}</li>
+                      {% endif %}
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  —
+                {% endif %}
+              {% endif %}
+            {% endif %}
           </td>
           <td style="font-size:10px;">—</td>
           <td style="font-size:10px;">
-            {% with valor_caracteristica=servicio.caracteristica_especial|default_if_none:servicio.servicio.caracteristica_especial %}
+            {% if servicio.caracteristica_especial != None %}
               {% if puede_editar_caracteristica %}
                 <span class="editable-caracteristica caracteristica-editable"
                       style="cursor:pointer;"
@@ -537,13 +571,29 @@
                       title="Clic para editar"
                       data-tipo="servicio"
                       data-id="{{ servicio.id }}"
-                      data-valor="{{ valor_caracteristica|default_if_none:''|escape }}">
-                  {{ valor_caracteristica|default:"-" }}
+                      data-valor="{{ servicio.caracteristica_especial|default_if_none:''|escape }}">
+                  {{ servicio.caracteristica_especial|default:"-" }}
                 </span>
               {% else %}
-                {{ valor_caracteristica|default:"-" }}
+                {{ servicio.caracteristica_especial|default:"-" }}
               {% endif %}
-                      </td>
+            {% else %}
+              {% if puede_editar_caracteristica %}
+                <span class="editable-caracteristica caracteristica-editable"
+                      style="cursor:pointer;"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Clic para editar"
+                      data-tipo="servicio"
+                      data-id="{{ servicio.id }}"
+                      data-valor="{{ servicio.servicio.caracteristica_especial|default_if_none:''|escape }}">
+                  {{ servicio.servicio.caracteristica_especial|default:"-" }}
+                </span>
+              {% else %}
+                {{ servicio.servicio.caracteristica_especial|default:"-" }}
+              {% endif %}
+            {% endif %}
+          </td>
           <td style="font-size:10px;">{{ servicio.servicio.unidad_medida|default:"" }}</td>
           <td style="font-size:10px;">0</td>
           <td style="font-size:10px;">—</td>
