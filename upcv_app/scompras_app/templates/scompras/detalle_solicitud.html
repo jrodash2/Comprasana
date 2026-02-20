@@ -43,6 +43,7 @@
                 <tr>
                   <td style="padding: 30px 0px 30px 30px;">
                     <img src="{% static 'assets/images/logo/logo.png' %}" alt="logo">
+{% if not es_presupuesto %}
 {% if es_scompras %}
 {% if not is_analista %}
 {% if solicitud.estado == 'Creada' %}
@@ -138,6 +139,7 @@
     {% endif %}
   {% endif %}
   {% endif %}
+{% endif %}
 {% endif %}
 {% endif %}
 
@@ -488,29 +490,15 @@
           <td style="font-size:10px;">{{ servicio.servicio.renglon|default:"" }}</td>
           <td style="font-size:10px;">—</td>
           <td style="font-size:10px;">
-            {% if servicio.nombre_override != None %}
-              {% with nombre_servicio=servicio.nombre_override %}
-                {% if puede_editar_caracteristica %}
-                  <span class="editable-servicio-nombre"
-                        style="cursor:pointer;"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="Clic para editar"
-                        data-id="{{ servicio.id }}"
-                        data-valor="{{ nombre_servicio|default_if_none:''|escapejs }}">
-                    {% if nombre_servicio %}
-                      <ul style="margin:0; padding-left:18px; font-size:10px;">
-                        {% for linea in nombre_servicio.splitlines %}
-                          {% if linea.strip %}
-                            <li>{{ linea }}</li>
-                          {% endif %}
-                        {% endfor %}
-                      </ul>
-                    {% else %}
-                      —
-                    {% endif %}
-                  </span>
-                {% else %}
+            {% with nombre_servicio=servicio.nombre_override|default_if_none:servicio.servicio.concepto %}
+              {% if puede_editar_caracteristica %}
+                <span class="editable-servicio-nombre"
+                      style="cursor:pointer;"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Clic para editar"
+                      data-id="{{ servicio.id }}"
+                      data-valor="{{ nombre_servicio|default_if_none:''|escapejs }}">
                   {% if nombre_servicio %}
                     <ul style="margin:0; padding-left:18px; font-size:10px;">
                       {% for linea in nombre_servicio.splitlines %}
@@ -522,45 +510,21 @@
                   {% else %}
                     —
                   {% endif %}
-                {% endif %}
-              {% endwith %}
-            {% else %}
-              {% with nombre_servicio=servicio.servicio.concepto %}
-                {% if puede_editar_caracteristica %}
-                  <span class="editable-servicio-nombre"
-                        style="cursor:pointer;"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="Clic para editar"
-                        data-id="{{ servicio.id }}"
-                        data-valor="{{ nombre_servicio|default_if_none:''|escapejs }}">
-                    {% if nombre_servicio %}
-                      <ul style="margin:0; padding-left:18px; font-size:10px;">
-                        {% for linea in nombre_servicio.splitlines %}
-                          {% if linea.strip %}
-                            <li>{{ linea }}</li>
-                          {% endif %}
-                        {% endfor %}
-                      </ul>
-                    {% else %}
-                      —
-                    {% endif %}
-                  </span>
+                </span>
+              {% else %}
+                {% if nombre_servicio %}
+                  <ul style="margin:0; padding-left:18px; font-size:10px;">
+                    {% for linea in nombre_servicio.splitlines %}
+                      {% if linea.strip %}
+                        <li>{{ linea }}</li>
+                      {% endif %}
+                    {% endfor %}
+                  </ul>
                 {% else %}
-                  {% if nombre_servicio %}
-                    <ul style="margin:0; padding-left:18px; font-size:10px;">
-                      {% for linea in nombre_servicio.splitlines %}
-                        {% if linea.strip %}
-                          <li>{{ linea }}</li>
-                        {% endif %}
-                      {% endfor %}
-                    </ul>
-                  {% else %}
-                    —
-                  {% endif %}
+                  —
                 {% endif %}
-              {% endwith %}
-            {% endif %}
+              {% endif %}
+            {% endwith %}
           </td>
           <td style="font-size:10px;">—</td>
           <td style="font-size:10px;">
