@@ -2971,83 +2971,125 @@ def importar_excel(request):
 
         if form.is_valid() and fecha_form.is_valid():  # Validar ambos formularios
             archivo = request.FILES['archivo_excel']
-            df = pd.read_excel(archivo).fillna("")
+            columnas_excel = [
+                'RENGLÓN',
+                'CÓDIGO DE INSUMO',
+                'NOMBRE',
+                'CARACTERÍSTICAS',
+                'NOMBRE DE LA PRESENTACIÓN',
+                'CANTIDAD Y UNIDAD DE MEDIDA DE LA PRESENTACIÓN',
+                'CÓDIGO DE PRESENTACIÓN',
+            ]
+            df = pd.read_excel(
+                archivo,
+                dtype=str,
+                engine='openpyxl',
+                usecols=columnas_excel,
+            ).fillna('')
+            df = df.rename(
+                columns={
+                    'RENGLÓN': 'renglon',
+                    'CÓDIGO DE INSUMO': 'codigo_insumo',
+                    'NOMBRE': 'nombre',
+                    'CARACTERÍSTICAS': 'caracteristicas',
+                    'NOMBRE DE LA PRESENTACIÓN': 'nombre_presentacion',
+                    'CANTIDAD Y UNIDAD DE MEDIDA DE LA PRESENTACIÓN': 'cantidad_unidad_presentacion',
+                    'CÓDIGO DE PRESENTACIÓN': 'codigo_presentacion',
+                }
+            )
 
-            codigos_excel = df['CÓDIGO DE PRESENTACIÓN'].map(lambda value: str(value).strip())
-            codigos_duplicados = codigos_excel[codigos_excel != ""]
+            df['codigo_presentacion'] = df['codigo_presentacion'].map(lambda value: str(value).strip())
+            codigos_duplicados = df.loc[
+                df['codigo_presentacion'] != '',
+                'codigo_presentacion',
+            ]
             codigos_duplicados = codigos_duplicados[codigos_duplicados.duplicated(keep=False)]
             if not codigos_duplicados.empty:
-                repetidos = ", ".join(sorted(set(codigos_duplicados.tolist())))
+                repetidos = ', '.join(sorted(set(codigos_duplicados.tolist())))
                 messages.error(
                     request,
-                    f"El archivo contiene códigos de presentación duplicados: {repetidos}. "
-                    "La importación fue cancelada.",
+                    f'El archivo contiene códigos de presentación duplicados: {repetidos}. '
+                    'La importación fue cancelada.',
                 )
                 return render(request, 'scompras/importar_excel.html', {'form': form, 'fecha_form': fecha_form})
 
-            existentes = {i.codigo_presentacion: i for i in Insumo.objects.all()}
-            para_crear = []
-            para_actualizar = []
-            ahora = timezone.now()
+            inicio_import = timezone.now()
+            tamano_chunk = 5000
+            campos_actualizacion = [
+                'renglon',
+                'codigo_insumo',
+                'nombre',
+                'caracteristicas',
+                'nombre_presentacion',
+                'cantidad_unidad_presentacion',
+                'codigo_presentacion',
+                'fecha_actualizacion',
+            ]
 
             with transaction.atomic():
-                for _, row in df.iterrows():
-                    cp = str(row['CÓDIGO DE PRESENTACIÓN']).strip()
-                    if not cp:
-                        continue
+                total_filas = len(df)
+                for inicio in range(0, total_filas, tamano_chunk):
+                    chunk = df.iloc[inicio:inicio + tamano_chunk]
+                    codigos_chunk = [
+                        codigo for codigo in chunk['codigo_presentacion'].tolist() if codigo
+                    ]
+                    existentes = Insumo.objects.in_bulk(
+                        codigos_chunk,
+                        field_name='codigo_presentacion',
+                    )
 
-                    renglon = str(row['RENGLÓN']).strip()
-                    codigo_insumo = str(row['CÓDIGO DE INSUMO']).strip()
-                    nombre = str(row['NOMBRE']).strip()
-                    caracteristicas = str(row['CARACTERÍSTICAS']).strip()
-                    nombre_presentacion = str(row['NOMBRE DE LA PRESENTACIÓN']).strip()
-                    cantidad_unidad_presentacion = str(
-                        row['CANTIDAD Y UNIDAD DE MEDIDA DE LA PRESENTACIÓN']
-                    ).strip()
+                    para_crear = []
+                    para_actualizar = []
 
-                    if cp in existentes:
-                        insumo = existentes[cp]
-                        insumo.renglon = renglon
-                        insumo.codigo_insumo = codigo_insumo
-                        insumo.nombre = nombre
-                        insumo.caracteristicas = caracteristicas
-                        insumo.nombre_presentacion = nombre_presentacion
-                        insumo.cantidad_unidad_presentacion = cantidad_unidad_presentacion
-                        insumo.codigo_presentacion = cp
-                        insumo.fecha_actualizacion = ahora
-                        para_actualizar.append(insumo)
-                    else:
-                        para_crear.append(
-                            Insumo(
-                                renglon=renglon,
-                                codigo_insumo=codigo_insumo,
-                                nombre=nombre,
-                                caracteristicas=caracteristicas,
-                                nombre_presentacion=nombre_presentacion,
-                                cantidad_unidad_presentacion=cantidad_unidad_presentacion,
-                                codigo_presentacion=cp,
-                                fecha_actualizacion=ahora,
+                    for row in chunk.itertuples(index=False):
+                        cp = row.codigo_presentacion
+                        if not cp:
+                            continue
+
+                        renglon = row.renglon.strip()
+                        codigo_insumo = row.codigo_insumo.strip()
+                        nombre = row.nombre.strip()
+                        caracteristicas = row.caracteristicas.strip()
+                        nombre_presentacion = row.nombre_presentacion.strip()
+                        cantidad_unidad_presentacion = row.cantidad_unidad_presentacion.strip()
+
+                        if cp in existentes:
+                            insumo = existentes[cp]
+                            insumo.renglon = renglon
+                            insumo.codigo_insumo = codigo_insumo
+                            insumo.nombre = nombre
+                            insumo.caracteristicas = caracteristicas
+                            insumo.nombre_presentacion = nombre_presentacion
+                            insumo.cantidad_unidad_presentacion = cantidad_unidad_presentacion
+                            insumo.codigo_presentacion = cp
+                            insumo.fecha_actualizacion = inicio_import
+                            para_actualizar.append(insumo)
+                        else:
+                            para_crear.append(
+                                Insumo(
+                                    renglon=renglon,
+                                    codigo_insumo=codigo_insumo,
+                                    nombre=nombre,
+                                    caracteristicas=caracteristicas,
+                                    nombre_presentacion=nombre_presentacion,
+                                    cantidad_unidad_presentacion=cantidad_unidad_presentacion,
+                                    codigo_presentacion=cp,
+                                    fecha_actualizacion=inicio_import,
+                                )
                             )
+
+                    if para_crear:
+                        Insumo.objects.bulk_create(para_crear, batch_size=2000)
+
+                    if para_actualizar:
+                        Insumo.objects.bulk_update(
+                            para_actualizar,
+                            fields=campos_actualizacion,
+                            batch_size=2000,
                         )
 
-                if para_crear:
-                    Insumo.objects.bulk_create(para_crear, batch_size=1000)
-
-                if para_actualizar:
-                    Insumo.objects.bulk_update(
-                        para_actualizar,
-                        fields=[
-                            'renglon',
-                            'codigo_insumo',
-                            'nombre',
-                            'caracteristicas',
-                            'nombre_presentacion',
-                            'cantidad_unidad_presentacion',
-                            'codigo_presentacion',
-                            'fecha_actualizacion',
-                        ],
-                        batch_size=1000,
-                    )
+                vigentes = Insumo.objects.filter(fecha_actualizacion=inicio_import).count()
+                inactivos = Insumo.objects.filter(fecha_actualizacion__lt=inicio_import).count()
 
                 # Aquí es donde se captura la fecha del formulario de fecha
                 fecha_in = fecha_form.save(commit=False)
