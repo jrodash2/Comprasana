@@ -102,11 +102,107 @@
   </div>
 </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
   (function () {
+    const endpoint = "{% url 'scompras:transferencia_buscar_renglones' %}";
+
+    function debounce(fn, delay) {
+      let timer = null;
+      return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+
+    function initAjaxRenglonSelect(select) {
+      if (!select || select.dataset.ajaxReady === '1') {
+        return;
+      }
+      select.dataset.ajaxReady = '1';
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'mt-1';
+
+      const searchInput = document.createElement('input');
+      searchInput.type = 'text';
+      searchInput.className = 'form-control form-control-sm mb-1';
+      searchInput.placeholder = 'Buscar renglón...';
+
+      const status = document.createElement('small');
+      status.className = 'text-muted d-block';
+      status.textContent = 'Escriba 2+ caracteres.';
+
+      select.parentNode.insertBefore(wrapper, select);
+      wrapper.appendChild(searchInput);
+      wrapper.appendChild(status);
+
+      const selectedOption = select.options[select.selectedIndex];
+      if (selectedOption && selectedOption.value) {
+        select.dataset.selectedText = selectedOption.textContent;
+      }
+
+      const loadResults = debounce(function () {
+        const q = searchInput.value.trim();
+        if (q.length < 2) {
+          status.textContent = 'Escriba 2+ caracteres.';
+          return;
+        }
+        status.textContent = 'Buscando...';
+
+        fetch(endpoint + '?q=' + encodeURIComponent(q) + '&limit=20', {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          credentials: 'same-origin'
+        })
+          .then((response) => response.ok ? response.json() : Promise.reject())
+          .then((data) => {
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">---------</option>';
+
+            (data.results || []).forEach((item) => {
+              const option = document.createElement('option');
+              option.value = item.id;
+              option.textContent = item.text;
+              if (String(item.id) === String(currentValue)) {
+                option.selected = true;
+              }
+              select.appendChild(option);
+            });
+
+            const seleccionActual = select.querySelector('option[value="' + currentValue + '"]');
+            if (!seleccionActual && select.dataset.selectedText && currentValue) {
+              const fallback = document.createElement('option');
+              fallback.value = currentValue;
+              fallback.textContent = select.dataset.selectedText;
+              fallback.selected = true;
+              select.appendChild(fallback);
+            }
+
+            status.textContent = (data.results || []).length
+              ? (data.results || []).length + ' resultado(s).'
+              : 'Sin resultados.';
+          })
+          .catch(() => {
+            status.textContent = 'Error al buscar.';
+          });
+      }, 250);
+
+      searchInput.addEventListener('input', loadResults);
+      select.addEventListener('change', function () {
+        const current = select.options[select.selectedIndex];
+        if (current && current.value) {
+          select.dataset.selectedText = current.textContent;
+        }
+      });
+    }
+
     const totalForms = document.getElementById('id_destinos-TOTAL_FORMS');
     const tbody = document.querySelector('#destinos-table tbody');
     const addBtn = document.getElementById('add-row');
+
+    document.querySelectorAll('select.js-renglon-ajax').forEach(initAjaxRenglonSelect);
 
     addBtn.addEventListener('click', function () {
       const index = parseInt(totalForms.value, 10);
@@ -114,6 +210,9 @@
       if (!firstRow) return;
 
       const clone = firstRow.cloneNode(true);
+      clone.querySelectorAll('.text-danger.small').forEach(function (el) { el.remove(); });
+      clone.querySelectorAll('.mt-1').forEach(function (el) { el.remove(); });
+
       clone.querySelectorAll('input, select, textarea').forEach(function (field) {
         if (!field.name) return;
         field.name = field.name.replace(/destinos-\d+-/g, `destinos-${index}-`);
@@ -125,9 +224,9 @@
         }
       });
 
-      clone.querySelectorAll('.text-danger.small').forEach(function (el) { el.remove(); });
       tbody.appendChild(clone);
       totalForms.value = index + 1;
+      clone.querySelectorAll('select.js-renglon-ajax').forEach(initAjaxRenglonSelect);
     });
   })();
 </script>
