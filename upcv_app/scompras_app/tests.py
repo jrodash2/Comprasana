@@ -127,3 +127,123 @@ class TransferenciaMultipleTests(TestCase):
             response = self.client.post(reverse('scompras:transferencia_multiple_crear'), self._payload_multiple(), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(mocked.called)
+
+
+class TransferenciaReversaTests(TestCase):
+    def setUp(self):
+        self.group = Group.objects.create(name='PRESUPUESTO')
+        self.user = User.objects.create_user(username='admin_presupuesto', password='secret123')
+        self.user.groups.add(self.group)
+        self.client.force_login(self.user)
+
+        self.presupuesto = PresupuestoAnual.objects.create(anio=2027, activo=True)
+        self.origen = PresupuestoRenglon.objects.create(
+            presupuesto_anual=self.presupuesto,
+            codigo_renglon='100',
+            descripcion='Origen',
+            monto_inicial=Decimal('1000.00'),
+        )
+        self.destino_1 = PresupuestoRenglon.objects.create(
+            presupuesto_anual=self.presupuesto,
+            codigo_renglon='200',
+            descripcion='Destino 1',
+            monto_inicial=Decimal('100.00'),
+        )
+        self.destino_2 = PresupuestoRenglon.objects.create(
+            presupuesto_anual=self.presupuesto,
+            codigo_renglon='300',
+            descripcion='Destino 2',
+            monto_inicial=Decimal('100.00'),
+        )
+
+    def test_reversa_simple_ok(self):
+        transferencia = TransferenciaPresupuestaria.objects.create(
+            presupuesto_anual=self.presupuesto,
+            renglon_origen=self.origen,
+            renglon_destino=self.destino_1,
+            monto=Decimal('50.00'),
+            descripcion='Simple',
+        )
+        response = self.client.post(
+            reverse('scompras:reversar_transferencia', args=[transferencia.id]),
+            {'motivo': 'Ajuste contable'},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.origen.refresh_from_db()
+        self.destino_1.refresh_from_db()
+        self.assertEqual(self.origen.monto_disponible, Decimal('1000.00'))
+        self.assertEqual(self.destino_1.monto_disponible, Decimal('100.00'))
+
+    def test_reversa_multiple_ok(self):
+        t1 = TransferenciaPresupuestaria.objects.create(
+            presupuesto_anual=self.presupuesto,
+            renglon_origen=self.origen,
+            renglon_destino=self.destino_1,
+            monto=Decimal('50.00'),
+            descripcion='Multiple',
+        )
+        t2 = TransferenciaPresupuestaria.objects.create(
+            presupuesto_anual=self.presupuesto,
+            renglon_origen=self.origen,
+            renglon_destino=self.destino_2,
+            monto=Decimal('25.00'),
+            descripcion='Multiple',
+        )
+        self.client.post(reverse('scompras:reversar_transferencia', args=[t1.id]), {'motivo': 'Ajuste 1'})
+        self.client.post(reverse('scompras:reversar_transferencia', args=[t2.id]), {'motivo': 'Ajuste 2'})
+
+        self.origen.refresh_from_db()
+        self.destino_1.refresh_from_db()
+        self.destino_2.refresh_from_db()
+        self.assertEqual(self.origen.monto_disponible, Decimal('1000.00'))
+        self.assertEqual(self.destino_1.monto_disponible, Decimal('100.00'))
+        self.assertEqual(self.destino_2.monto_disponible, Decimal('100.00'))
+
+    def test_no_permite_reversa_doble(self):
+        transferencia = TransferenciaPresupuestaria.objects.create(
+            presupuesto_anual=self.presupuesto,
+            renglon_origen=self.origen,
+            renglon_destino=self.destino_1,
+            monto=Decimal('20.00'),
+            descripcion='Simple',
+        )
+        self.client.post(reverse('scompras:reversar_transferencia', args=[transferencia.id]), {'motivo': 'Ajuste 1'})
+        response = self.client.post(
+            reverse('scompras:reversar_transferencia', args=[transferencia.id]),
+            {'motivo': 'Ajuste 2'},
+            follow=True,
+        )
+
+        self.assertContains(response, 'ya fue revertida', status_code=200)
+        self.assertEqual(
+            KardexPresupuesto.objects.filter(
+                transferencia=transferencia,
+                referencia__startswith='REVERSA|Transferencia #',
+            ).count(),
+            2,
+        )
+
+    def test_reversa_sin_stock_en_destino_hace_rollback(self):
+        transferencia = TransferenciaPresupuestaria.objects.create(
+            presupuesto_anual=self.presupuesto,
+            renglon_origen=self.origen,
+            renglon_destino=self.destino_1,
+            monto=Decimal('80.00'),
+            descripcion='Simple',
+        )
+
+        self.destino_1.monto_modificado -= Decimal('80.00')
+        self.destino_1.save(update_fields=['monto_modificado', 'fecha_actualizacion'])
+
+        response = self.client.post(
+            reverse('scompras:reversar_transferencia', args=[transferencia.id]),
+            {'motivo': 'Intento inválido'},
+            follow=True,
+        )
+
+        self.assertContains(response, 'no tiene disponible suficiente', status_code=200)
+        self.origen.refresh_from_db()
+        self.destino_1.refresh_from_db()
+        self.assertEqual(self.origen.monto_disponible, Decimal('920.00'))
+        self.assertEqual(self.destino_1.monto_disponible, Decimal('0.00'))
