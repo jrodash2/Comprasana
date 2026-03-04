@@ -36,6 +36,8 @@ from .form import (
     LiberarCDPForm,
     LiberarCDPSolicitudForm,
     TransferenciaPresupuestariaForm,
+    TransferenciaMultipleForm,
+    TransferenciaDestinoFormSet,
     TipoProcesoCompraForm,
     SubtipoProcesoCompraForm,
     ProcesoCompraPasoForm,
@@ -790,6 +792,96 @@ def transferencia_crear(request):
         'scompras/transferencia_form.html',
         {
             'form': form,
+            'presupuesto_activo': presupuesto_activo,
+        },
+    )
+
+
+@login_required
+@grupo_requerido('Administrador', 'PRESUPUESTO')
+def transferencia_multiple_crear(request):
+    presupuesto_activo = PresupuestoAnual.presupuesto_activo()
+    if not presupuesto_activo:
+        messages.error(request, 'No hay presupuesto activo. Active un presupuesto para crear transferencias.')
+        return redirect('scompras:presupuesto_anual_list')
+
+    origen_param = request.GET.get('origen')
+    origen_inicial = None
+    if origen_param:
+        try:
+            origen_inicial = PresupuestoRenglon.objects.get(pk=origen_param)
+            if origen_inicial.presupuesto_anual_id != presupuesto_activo.id:
+                messages.warning(request, 'Solo se pueden transferir renglones del presupuesto activo.')
+                origen_inicial = None
+        except PresupuestoRenglon.DoesNotExist:
+            messages.warning(request, 'El renglón origen indicado no existe o no pertenece al presupuesto activo.')
+
+    initial = {}
+    if origen_inicial:
+        initial['renglon_origen'] = origen_inicial
+
+    if request.method == 'POST':
+        form = TransferenciaMultipleForm(request.POST, presupuesto_activo=presupuesto_activo)
+        form_valido = form.is_valid()
+        origen_para_formset = form.cleaned_data.get('renglon_origen') if form_valido else None
+        formset = TransferenciaDestinoFormSet(
+            request.POST,
+            presupuesto_activo=presupuesto_activo,
+            origen=origen_para_formset,
+            prefix='destinos',
+        )
+
+        if form_valido and formset.is_valid():
+            origen = form.cleaned_data['renglon_origen']
+            descripcion = form.cleaned_data.get('descripcion')
+            detalles = [
+                destino_form.cleaned_data
+                for destino_form in formset.forms
+                if destino_form.cleaned_data and not destino_form.cleaned_data.get('DELETE')
+            ]
+            total = getattr(formset, 'total_monto', sum(fila['monto'] for fila in detalles))
+
+            try:
+                with transaction.atomic():
+                    renglones_ids = {origen.id, *[fila['renglon_destino'].id for fila in detalles]}
+                    renglones = {
+                        renglon.id: renglon
+                        for renglon in PresupuestoRenglon.objects.select_for_update().filter(pk__in=renglones_ids)
+                    }
+                    origen_bloqueado = renglones.get(origen.id)
+                    if origen_bloqueado is None:
+                        raise ValidationError('El renglón origen no existe.')
+                    if total > origen_bloqueado.monto_disponible:
+                        raise ValidationError('La suma de montos destino excede el disponible del renglón origen.')
+
+                    for fila in detalles:
+                        transferencia = TransferenciaPresupuestaria(
+                            presupuesto_anual=presupuesto_activo,
+                            renglon_origen=origen_bloqueado,
+                            renglon_destino=renglones[fila['renglon_destino'].id],
+                            monto=fila['monto'],
+                            descripcion=descripcion,
+                        )
+                        transferencia.save()
+            except ValidationError as exc:
+                form.add_error(None, exc)
+            else:
+                messages.success(request, 'Transferencia múltiple realizada y registrada en el kardex.')
+                return redirect('scompras:presupuesto_anual_detalle', presupuesto_id=presupuesto_activo.id)
+    else:
+        form = TransferenciaMultipleForm(presupuesto_activo=presupuesto_activo, initial=initial)
+        formset = TransferenciaDestinoFormSet(
+            presupuesto_activo=presupuesto_activo,
+            origen=origen_inicial,
+            prefix='destinos',
+        )
+
+    return render(
+        request,
+        'scompras/transferencia_multiple_form.html',
+        {
+            'form': form,
+            'formset': formset,
             'presupuesto_activo': presupuesto_activo,
         },
     )

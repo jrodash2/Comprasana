@@ -47,6 +47,7 @@ urlpatterns = [
     path('presupuestos/renglon/<int:renglon_id>/kardex/', views.kardex_renglon, name='kardex_renglon'),
     path('presupuestos/transferencias/', views.transferencias_list, name='transferencias_list'),
     path('presupuestos/transferencias/crear/', views.transferencia_crear, name='transferencia_crear'),
+    path('presupuestos/transferencias/crear-multiple/', views.transferencia_multiple_crear, name='transferencia_multiple_crear'),
     path('catalogo/subproductos/', views.subproductos_por_producto, name='subproductos_por_producto'),
 
     # Departamentos

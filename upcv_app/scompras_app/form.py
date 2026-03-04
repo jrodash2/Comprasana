@@ -858,3 +858,131 @@ class TransferenciaPresupuestariaForm(forms.ModelForm):
         if commit:
             instancia.save()
         return instancia
+
+
+class TransferenciaMultipleForm(forms.Form):
+    """Formulario base para transferencia desde un único renglón origen."""
+
+    renglon_origen = forms.ModelChoiceField(
+        queryset=PresupuestoRenglon.objects.none(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Renglón origen',
+    )
+    descripcion = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        label='Observación',
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.presupuesto_activo = kwargs.pop('presupuesto_activo', None) or PresupuestoAnual.presupuesto_activo()
+        super().__init__(*args, **kwargs)
+        qs = PresupuestoRenglon.objects.none()
+        if self.presupuesto_activo:
+            qs = PresupuestoRenglon.objects.select_related(
+                'presupuesto_anual',
+                'producto',
+                'subproducto',
+            ).filter(presupuesto_anual=self.presupuesto_activo)
+        self.fields['renglon_origen'].queryset = qs
+        self.fields['renglon_origen'].label_from_instance = lambda obj: obj.label_compacto
+
+    def clean(self):
+        cleaned = super().clean()
+        origen = cleaned.get('renglon_origen')
+        if not self.presupuesto_activo:
+            raise ValidationError('No hay presupuesto activo para realizar transferencias.')
+        if origen and origen.presupuesto_anual_id != self.presupuesto_activo.id:
+            raise ValidationError('El renglón origen debe pertenecer al presupuesto activo.')
+        return cleaned
+
+
+class TransferenciaDestinoForm(forms.Form):
+    renglon_destino = forms.ModelChoiceField(
+        queryset=PresupuestoRenglon.objects.none(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Renglón destino',
+    )
+    monto = forms.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        min_value=0.01,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
+        label='Monto',
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.presupuesto_activo = kwargs.pop('presupuesto_activo', None)
+        super().__init__(*args, **kwargs)
+        qs = PresupuestoRenglon.objects.none()
+        if self.presupuesto_activo:
+            qs = PresupuestoRenglon.objects.select_related(
+                'presupuesto_anual',
+                'producto',
+                'subproducto',
+            ).filter(presupuesto_anual=self.presupuesto_activo)
+        self.fields['renglon_destino'].queryset = qs
+        self.fields['renglon_destino'].label_from_instance = lambda obj: obj.label_compacto
+
+
+class BaseTransferenciaDestinoFormSet(forms.BaseFormSet):
+    def __init__(self, *args, **kwargs):
+        self.presupuesto_activo = kwargs.pop('presupuesto_activo', None)
+        self.origen = kwargs.pop('origen', None)
+        super().__init__(*args, **kwargs)
+        qs = PresupuestoRenglon.objects.none()
+        if self.presupuesto_activo:
+            qs = PresupuestoRenglon.objects.select_related(
+                'presupuesto_anual',
+                'producto',
+                'subproducto',
+            ).filter(presupuesto_anual=self.presupuesto_activo)
+        for form in self.forms:
+            form.fields['renglon_destino'].queryset = qs
+            form.fields['renglon_destino'].label_from_instance = lambda obj: obj.label_compacto
+
+    def clean(self):
+        if any(self.errors):
+            return
+
+        destinos = set()
+        total = 0
+        filas_validas = 0
+
+        for form in self.forms:
+            if not form.cleaned_data:
+                continue
+            if form.cleaned_data.get('DELETE'):
+                continue
+
+            destino = form.cleaned_data.get('renglon_destino')
+            monto = form.cleaned_data.get('monto')
+            if not destino or monto is None:
+                continue
+
+            filas_validas += 1
+
+            if monto <= 0:
+                raise ValidationError('Cada monto destino debe ser mayor que cero.')
+            if self.presupuesto_activo and destino.presupuesto_anual_id != self.presupuesto_activo.id:
+                raise ValidationError('Todos los destinos deben pertenecer al presupuesto activo.')
+            if self.origen and destino.id == self.origen.id:
+                raise ValidationError('El renglón origen y destino deben ser diferentes.')
+            if destino.id in destinos:
+                raise ValidationError('No se permiten renglones destino duplicados en la misma transferencia.')
+
+            destinos.add(destino.id)
+            total += monto
+
+        if filas_validas == 0:
+            raise ValidationError('Debe agregar al menos un renglón destino.')
+
+        self.total_monto = total
+
+
+TransferenciaDestinoFormSet = forms.formset_factory(
+    TransferenciaDestinoForm,
+    formset=BaseTransferenciaDestinoFormSet,
+    extra=1,
+    can_delete=True,
+)

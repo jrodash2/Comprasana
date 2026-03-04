@@ -1,0 +1,133 @@
+{% extends 'scompras/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Nueva transferencia múltiple presupuestaria</h5>
+          <a class="btn btn-light" href="{% url 'scompras:transferencias_list' %}">Volver</a>
+        </div>
+        <div class="card-body">
+          <p class="text-muted mb-3">Presupuesto activo: {{ presupuesto_activo }}</p>
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="row">
+              <div class="col-md-8 mb-3">
+                <label class="form-label" for="id_renglon_origen">{{ form.renglon_origen.label }}</label>
+                {{ form.renglon_origen }}
+                {% for error in form.renglon_origen.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="text-muted small pt-2">Seleccione un solo origen y distribuya el monto en varios destinos.</div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="id_descripcion">{{ form.descripcion.label }}</label>
+              {{ form.descripcion }}
+              {% for error in form.descripcion.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <h6 class="mt-4">Destinos</h6>
+            {{ formset.management_form }}
+            {% if formset.non_form_errors %}
+              <div class="alert alert-danger">
+                {% for error in formset.non_form_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle" id="destinos-table">
+                <thead>
+                  <tr>
+                    <th>Renglón destino</th>
+                    <th style="width: 180px;">Monto</th>
+                    <th style="width: 110px;">Eliminar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for destino_form in formset %}
+                    <tr class="destino-form-row">
+                      <td>
+                        {{ destino_form.renglon_destino }}
+                        {% for error in destino_form.renglon_destino.errors %}
+                          <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                      </td>
+                      <td>
+                        {{ destino_form.monto }}
+                        {% for error in destino_form.monto.errors %}
+                          <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                      </td>
+                      <td class="text-center">
+                        {{ destino_form.DELETE }}
+                        {% for hidden in destino_form.hidden_fields %}
+                          {{ hidden }}
+                        {% endfor %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <button type="button" id="add-row" class="btn btn-outline-secondary">Agregar destino</button>
+              <button type="submit" class="btn btn-primary">Guardar transferencia múltiple</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const totalForms = document.getElementById('id_destinos-TOTAL_FORMS');
+    const tbody = document.querySelector('#destinos-table tbody');
+    const addBtn = document.getElementById('add-row');
+
+    addBtn.addEventListener('click', function () {
+      const index = parseInt(totalForms.value, 10);
+      const firstRow = tbody.querySelector('.destino-form-row');
+      if (!firstRow) return;
+
+      const clone = firstRow.cloneNode(true);
+      clone.querySelectorAll('input, select, textarea').forEach(function (field) {
+        if (!field.name) return;
+        field.name = field.name.replace(/destinos-\d+-/g, `destinos-${index}-`);
+        field.id = field.id.replace(/id_destinos-\d+-/g, `id_destinos-${index}-`);
+        if (field.type === 'checkbox') {
+          field.checked = false;
+        } else {
+          field.value = '';
+        }
+      });
+
+      clone.querySelectorAll('.text-danger.small').forEach(function (el) { el.remove(); });
+      tbody.appendChild(clone);
+      totalForms.value = index + 1;
+    });
+  })();
+</script>
+{% endblock %}
