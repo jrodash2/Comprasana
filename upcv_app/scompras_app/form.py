@@ -888,10 +888,11 @@ class TransferenciaMultipleForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.presupuesto_activo = kwargs.pop('presupuesto_activo', None) or PresupuestoAnual.presupuesto_activo()
+        renglones_qs = kwargs.pop('renglones_qs', None)
         super().__init__(*args, **kwargs)
-        self.fields['renglon_origen'].queryset = PresupuestoRenglon.objects.none()
+        self.fields['renglon_origen'].queryset = renglones_qs if renglones_qs is not None else PresupuestoRenglon.objects.none()
         self.fields['renglon_origen'].label_from_instance = lambda obj: obj.label_compacto
-        if self.presupuesto_activo:
+        if renglones_qs is None and self.presupuesto_activo:
             valor = self.data.get(self.add_prefix('renglon_origen')) if self.is_bound else self.initial.get('renglon_origen')
             try:
                 valor = int(valor)
@@ -930,10 +931,11 @@ class TransferenciaDestinoForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.presupuesto_activo = kwargs.pop('presupuesto_activo', None)
+        renglones_qs = kwargs.pop('renglones_qs', None)
         super().__init__(*args, **kwargs)
         self.fields['renglon_destino'].label_from_instance = lambda obj: obj.label_compacto
-        self.fields['renglon_destino'].queryset = PresupuestoRenglon.objects.none()
-        if self.presupuesto_activo:
+        self.fields['renglon_destino'].queryset = renglones_qs if renglones_qs is not None else PresupuestoRenglon.objects.none()
+        if renglones_qs is None and self.presupuesto_activo:
             valor = self.data.get(self.add_prefix('renglon_destino')) if self.is_bound else self.initial.get('renglon_destino')
             try:
                 valor = int(valor)

@@ -927,20 +927,33 @@ def transferencia_multiple_crear(request):
         except PresupuestoRenglon.DoesNotExist:
             messages.warning(request, 'El renglón origen indicado no existe o no pertenece al presupuesto activo.')
 
+    renglones_qs = PresupuestoRenglon.objects.select_related(
+        'presupuesto_anual',
+        'producto',
+        'subproducto',
+    ).filter(presupuesto_anual=presupuesto_activo)
+
     initial = {}
     if origen_inicial:
         initial['renglon_origen'] = origen_inicial
 
     if request.method == 'POST':
-        form = TransferenciaMultipleForm(request.POST, presupuesto_activo=presupuesto_activo)
+        form = TransferenciaMultipleForm(
+            request.POST,
+            presupuesto_activo=presupuesto_activo,
+            renglones_qs=renglones_qs,
+        )
         form_valido = form.is_valid()
         origen_para_formset = form.cleaned_data.get('renglon_origen') if form_valido else None
         formset = TransferenciaDestinoFormSet(
             request.POST,
             presupuesto_activo=presupuesto_activo,
             origen=origen_para_formset,
+            form_kwargs={'renglones_qs': renglones_qs},
             prefix='destinos',
         )
+        for destino_form in formset.forms:
+            destino_form.fields['renglon_destino'].queryset = renglones_qs
 
         if form_valido and formset.is_valid():
             origen = form.cleaned_data['renglon_origen']
@@ -980,12 +993,19 @@ def transferencia_multiple_crear(request):
                 messages.success(request, 'Transferencia múltiple realizada y registrada en el kardex.')
                 return redirect('scompras:presupuesto_anual_detalle', presupuesto_id=presupuesto_activo.id)
     else:
-        form = TransferenciaMultipleForm(presupuesto_activo=presupuesto_activo, initial=initial)
+        form = TransferenciaMultipleForm(
+            presupuesto_activo=presupuesto_activo,
+            renglones_qs=renglones_qs,
+            initial=initial,
+        )
         formset = TransferenciaDestinoFormSet(
             presupuesto_activo=presupuesto_activo,
             origen=origen_inicial,
+            form_kwargs={'renglones_qs': renglones_qs},
             prefix='destinos',
         )
+        for destino_form in formset.forms:
+            destino_form.fields['renglon_destino'].queryset = renglones_qs
 
     return render(
         request,
