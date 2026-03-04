@@ -808,8 +808,8 @@ class TransferenciaPresupuestariaForm(forms.ModelForm):
         model = TransferenciaPresupuestaria
         fields = ['renglon_origen', 'renglon_destino', 'monto', 'descripcion']
         widgets = {
-            'renglon_origen': forms.Select(attrs={'class': 'form-control'}),
-            'renglon_destino': forms.Select(attrs={'class': 'form-control'}),
+            'renglon_origen': forms.Select(attrs={'class': 'form-control js-renglon-ajax'}),
+            'renglon_destino': forms.Select(attrs={'class': 'form-control js-renglon-ajax'}),
             'monto': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
@@ -817,18 +817,30 @@ class TransferenciaPresupuestariaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.presupuesto_activo = kwargs.pop('presupuesto_activo', None) or PresupuestoAnual.presupuesto_activo()
         super().__init__(*args, **kwargs)
-        qs = PresupuestoRenglon.objects.none()
-        if self.presupuesto_activo:
-            qs = PresupuestoRenglon.objects.select_related(
-                'presupuesto_anual',
-                'producto',
-                'subproducto',
-            ).filter(presupuesto_anual=self.presupuesto_activo)
-        self.fields['renglon_origen'].queryset = qs
-        self.fields['renglon_destino'].queryset = qs
+        self.fields['renglon_origen'].queryset = PresupuestoRenglon.objects.none()
+        self.fields['renglon_destino'].queryset = PresupuestoRenglon.objects.none()
         self.fields['renglon_origen'].label_from_instance = lambda obj: obj.label_compacto
         self.fields['renglon_destino'].label_from_instance = lambda obj: obj.label_compacto
         self.fields['descripcion'].label = 'Observación'
+        self._incluir_renglon_seleccionado('renglon_origen')
+        self._incluir_renglon_seleccionado('renglon_destino')
+
+    def _incluir_renglon_seleccionado(self, field_name):
+        if not self.presupuesto_activo:
+            return
+        field = self.fields[field_name]
+        valor = self.data.get(self.add_prefix(field_name)) if self.is_bound else self.initial.get(field_name)
+        if not valor and getattr(self.instance, f'{field_name}_id', None):
+            valor = getattr(self.instance, f'{field_name}_id')
+        try:
+            valor = int(valor)
+        except (TypeError, ValueError):
+            return
+        field.queryset = PresupuestoRenglon.objects.select_related(
+            'presupuesto_anual',
+            'producto',
+            'subproducto',
+        ).filter(presupuesto_anual=self.presupuesto_activo, pk=valor)
 
     def clean(self):
         cleaned = super().clean()
@@ -865,7 +877,7 @@ class TransferenciaMultipleForm(forms.Form):
 
     renglon_origen = forms.ModelChoiceField(
         queryset=PresupuestoRenglon.objects.none(),
-        widget=forms.Select(attrs={'class': 'form-control'}),
+        widget=forms.Select(attrs={'class': 'form-control js-renglon-ajax'}),
         label='Renglón origen',
     )
     descripcion = forms.CharField(
@@ -876,16 +888,22 @@ class TransferenciaMultipleForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.presupuesto_activo = kwargs.pop('presupuesto_activo', None) or PresupuestoAnual.presupuesto_activo()
+        renglones_qs = kwargs.pop('renglones_qs', None)
         super().__init__(*args, **kwargs)
-        qs = PresupuestoRenglon.objects.none()
-        if self.presupuesto_activo:
-            qs = PresupuestoRenglon.objects.select_related(
-                'presupuesto_anual',
-                'producto',
-                'subproducto',
-            ).filter(presupuesto_anual=self.presupuesto_activo)
-        self.fields['renglon_origen'].queryset = qs
+        self.fields['renglon_origen'].queryset = renglones_qs if renglones_qs is not None else PresupuestoRenglon.objects.none()
         self.fields['renglon_origen'].label_from_instance = lambda obj: obj.label_compacto
+        if renglones_qs is None and self.presupuesto_activo:
+            valor = self.data.get(self.add_prefix('renglon_origen')) if self.is_bound else self.initial.get('renglon_origen')
+            try:
+                valor = int(valor)
+            except (TypeError, ValueError):
+                valor = None
+            if valor:
+                self.fields['renglon_origen'].queryset = PresupuestoRenglon.objects.select_related(
+                    'presupuesto_anual',
+                    'producto',
+                    'subproducto',
+                ).filter(presupuesto_anual=self.presupuesto_activo, pk=valor)
 
     def clean(self):
         cleaned = super().clean()
@@ -900,7 +918,7 @@ class TransferenciaMultipleForm(forms.Form):
 class TransferenciaDestinoForm(forms.Form):
     renglon_destino = forms.ModelChoiceField(
         queryset=PresupuestoRenglon.objects.none(),
-        widget=forms.Select(attrs={'class': 'form-control'}),
+        widget=forms.Select(attrs={'class': 'form-control js-renglon-ajax'}),
         label='Renglón destino',
     )
     monto = forms.DecimalField(
@@ -913,16 +931,22 @@ class TransferenciaDestinoForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.presupuesto_activo = kwargs.pop('presupuesto_activo', None)
+        renglones_qs = kwargs.pop('renglones_qs', None)
         super().__init__(*args, **kwargs)
-        qs = PresupuestoRenglon.objects.none()
-        if self.presupuesto_activo:
-            qs = PresupuestoRenglon.objects.select_related(
-                'presupuesto_anual',
-                'producto',
-                'subproducto',
-            ).filter(presupuesto_anual=self.presupuesto_activo)
-        self.fields['renglon_destino'].queryset = qs
         self.fields['renglon_destino'].label_from_instance = lambda obj: obj.label_compacto
+        self.fields['renglon_destino'].queryset = renglones_qs if renglones_qs is not None else PresupuestoRenglon.objects.none()
+        if renglones_qs is None and self.presupuesto_activo:
+            valor = self.data.get(self.add_prefix('renglon_destino')) if self.is_bound else self.initial.get('renglon_destino')
+            try:
+                valor = int(valor)
+            except (TypeError, ValueError):
+                valor = None
+            if valor:
+                self.fields['renglon_destino'].queryset = PresupuestoRenglon.objects.select_related(
+                    'presupuesto_anual',
+                    'producto',
+                    'subproducto',
+                ).filter(presupuesto_anual=self.presupuesto_activo, pk=valor)
 
 
 class BaseTransferenciaDestinoFormSet(forms.BaseFormSet):
@@ -930,15 +954,7 @@ class BaseTransferenciaDestinoFormSet(forms.BaseFormSet):
         self.presupuesto_activo = kwargs.pop('presupuesto_activo', None)
         self.origen = kwargs.pop('origen', None)
         super().__init__(*args, **kwargs)
-        qs = PresupuestoRenglon.objects.none()
-        if self.presupuesto_activo:
-            qs = PresupuestoRenglon.objects.select_related(
-                'presupuesto_anual',
-                'producto',
-                'subproducto',
-            ).filter(presupuesto_anual=self.presupuesto_activo)
         for form in self.forms:
-            form.fields['renglon_destino'].queryset = qs
             form.fields['renglon_destino'].label_from_instance = lambda obj: obj.label_compacto
 
     def clean(self):
