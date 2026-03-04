@@ -66,7 +66,7 @@
                 </thead>
                 <tbody>
                   {% for destino_form in formset %}
-                    <tr class="destino-form-row">
+                    <tr class="destino-form-row" data-form-index="{{ forloop.counter0 }}">
                       <td>
                         {{ destino_form.renglon_destino }}
                         {% for error in destino_form.renglon_destino.errors %}
@@ -80,7 +80,10 @@
                         {% endfor %}
                       </td>
                       <td class="text-center">
-                        {{ destino_form.DELETE }}
+                        <div class="d-none">
+                          {{ destino_form.DELETE }}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger js-remove-row">Eliminar</button>
                         {% for hidden in destino_form.hidden_fields %}
                           {{ hidden }}
                         {% endfor %}
@@ -199,8 +202,49 @@
     }
 
     const totalForms = document.getElementById('id_destinos-TOTAL_FORMS');
+    const initialForms = document.getElementById('id_destinos-INITIAL_FORMS');
     const tbody = document.querySelector('#destinos-table tbody');
     const addBtn = document.getElementById('add-row');
+
+    function getRowIndex(row) {
+      if (row.dataset.formIndex !== undefined) {
+        return parseInt(row.dataset.formIndex, 10);
+      }
+      const field = row.querySelector('[name^="destinos-"]');
+      if (!field || !field.name) return -1;
+      const match = field.name.match(/destinos-(\d+)-/);
+      return match ? parseInt(match[1], 10) : -1;
+    }
+
+    function setRowIndex(row, newIndex) {
+      const oldIndex = getRowIndex(row);
+      if (oldIndex < 0) return;
+      row.dataset.formIndex = String(newIndex);
+      row.querySelectorAll('input, select, textarea, label').forEach(function (field) {
+        if (field.name) {
+          field.name = field.name.replace(new RegExp(`destinos-${oldIndex}-`, 'g'), `destinos-${newIndex}-`);
+        }
+        if (field.id) {
+          field.id = field.id.replace(new RegExp(`id_destinos-${oldIndex}-`, 'g'), `id_destinos-${newIndex}-`);
+        }
+        if (field.htmlFor) {
+          field.htmlFor = field.htmlFor.replace(new RegExp(`id_destinos-${oldIndex}-`, 'g'), `id_destinos-${newIndex}-`);
+        }
+      });
+    }
+
+    function reindexNewRows() {
+      const initialCount = parseInt(initialForms.value, 10) || 0;
+      let nextNewIndex = initialCount;
+      tbody.querySelectorAll('.destino-form-row').forEach(function (row) {
+        const idx = getRowIndex(row);
+        if (idx >= initialCount) {
+          setRowIndex(row, nextNewIndex);
+          nextNewIndex += 1;
+        }
+      });
+      totalForms.value = tbody.querySelectorAll('.destino-form-row').length;
+    }
 
     document.querySelectorAll('select.js-renglon-ajax').forEach(initAjaxRenglonSelect);
 
@@ -210,6 +254,8 @@
       if (!firstRow) return;
 
       const clone = firstRow.cloneNode(true);
+      clone.style.display = '';
+      clone.classList.remove('d-none');
       clone.querySelectorAll('.text-danger.small').forEach(function (el) { el.remove(); });
       clone.querySelectorAll('.mt-1').forEach(function (el) { el.remove(); });
 
@@ -224,9 +270,30 @@
         }
       });
 
+      clone.dataset.formIndex = String(index);
       tbody.appendChild(clone);
       totalForms.value = index + 1;
       clone.querySelectorAll('select.js-renglon-ajax').forEach(initAjaxRenglonSelect);
+    });
+
+    tbody.addEventListener('click', function (event) {
+      const removeBtn = event.target.closest('.js-remove-row');
+      if (!removeBtn) return;
+
+      const row = removeBtn.closest('.destino-form-row');
+      if (!row) return;
+
+      const rowIndex = getRowIndex(row);
+      const initialCount = parseInt(initialForms.value, 10) || 0;
+      const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+
+      if (deleteInput && rowIndex < initialCount) {
+        deleteInput.checked = true;
+        row.style.display = 'none';
+      } else {
+        row.remove();
+        reindexNewRows();
+      }
     });
   })();
 </script>
