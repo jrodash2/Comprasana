@@ -49,6 +49,7 @@
 <script>
   (function () {
     const endpoint = "{% url 'scompras:transferencia_buscar_renglones' %}";
+    const montoEndpoint = "{% url 'scompras:transferencia_renglon_monto' %}";
 
     function debounce(fn, delay) {
       let timer = null;
@@ -56,6 +57,33 @@
         clearTimeout(timer);
         timer = setTimeout(() => fn.apply(this, args), delay);
       };
+    }
+
+
+    function formatearMonto(monto) {
+      const valor = Number(monto);
+      if (!Number.isFinite(valor)) return '--';
+      return 'Q ' + valor.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function mostrarMontoRenglon(contenedor, monto) {
+      if (!contenedor) return;
+      contenedor.textContent = 'Monto actual: ' + (monto === null || monto === undefined || monto === '' ? '--' : formatearMonto(monto));
+    }
+
+    function cargarMontoRenglon(renglonId, targetElement) {
+      if (!targetElement) return;
+      if (!renglonId) {
+        mostrarMontoRenglon(targetElement, null);
+        return;
+      }
+      fetch(montoEndpoint + '?id=' + encodeURIComponent(renglonId), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin'
+      })
+        .then((response) => response.ok ? response.json() : Promise.reject())
+        .then((data) => mostrarMontoRenglon(targetElement, data.monto_disponible))
+        .catch(() => mostrarMontoRenglon(targetElement, null));
     }
 
     function initAjaxRenglonSelect(select) {
@@ -80,6 +108,11 @@
       select.parentNode.insertBefore(wrapper, select);
       wrapper.appendChild(searchInput);
       wrapper.appendChild(status);
+
+      const montoInfo = document.createElement('small');
+      montoInfo.className = 'text-info d-block mt-1';
+      mostrarMontoRenglon(montoInfo, null);
+      wrapper.appendChild(montoInfo);
 
       const loadResults = debounce(function () {
         const q = searchInput.value.trim();
@@ -107,6 +140,7 @@
               const option = document.createElement('option');
               option.value = item.id;
               option.textContent = item.text;
+              option.dataset.montoDisponible = item.monto_disponible;
               if (String(item.id) === String(currentValue)) {
                 option.selected = true;
               }
@@ -140,10 +174,20 @@
         const current = select.options[select.selectedIndex];
         if (current && current.value) {
           select.dataset.selectedText = current.textContent;
+          if (current.dataset.montoDisponible !== undefined && current.dataset.montoDisponible !== '') {
+            mostrarMontoRenglon(montoInfo, current.dataset.montoDisponible);
+          } else {
+            cargarMontoRenglon(current.value, montoInfo);
+          }
+        } else {
+          mostrarMontoRenglon(montoInfo, null);
         }
       });
 
       searchInput.addEventListener('input', loadResults);
+      if (select.value) {
+        cargarMontoRenglon(select.value, montoInfo);
+      }
       select.name = originalName;
     }
 
