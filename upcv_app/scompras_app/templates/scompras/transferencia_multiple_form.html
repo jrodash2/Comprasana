@@ -208,6 +208,12 @@
       initAjaxRenglonSelect(select);
     }
 
+    function inicializarFiltroOrigen() {
+      const origenSelect = document.getElementById('id_renglon_origen');
+      if (!origenSelect) return;
+      initAjaxRenglonSelect(origenSelect);
+    }
+
     const totalForms = document.getElementById('id_destinos-TOTAL_FORMS');
     const initialForms = document.getElementById('id_destinos-INITIAL_FORMS');
     const tbody = document.querySelector('#destinos-table tbody');
@@ -253,6 +259,7 @@
       totalForms.value = tbody.querySelectorAll('.destino-form-row').length;
     }
 
+    inicializarFiltroOrigen();
     tbody.querySelectorAll('.destino-form-row').forEach(inicializarFiltroDestino);
 
     addBtn.addEventListener('click', function () {
