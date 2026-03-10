@@ -791,10 +791,34 @@ def transferencia_buscar_renglones(request):
             'id': item.id,
             'text': item.label_compacto,
             'codigo': item.codigo_renglon,
+            'monto_disponible': float(item.monto_disponible),
         }
         for item in queryset.order_by('codigo_renglon')[:limit]
     ]
     return JsonResponse({'results': resultados})
+
+
+@login_required
+@grupo_requerido('Administrador', 'PRESUPUESTO')
+@require_GET
+def transferencia_renglon_monto(request):
+    presupuesto_activo = PresupuestoAnual.presupuesto_activo()
+    if not presupuesto_activo:
+        return JsonResponse({'monto_disponible': None})
+
+    renglon_id = request.GET.get('id')
+    if not renglon_id:
+        return JsonResponse({'monto_disponible': None})
+
+    renglon = PresupuestoRenglon.objects.filter(
+        presupuesto_anual=presupuesto_activo,
+        pk=renglon_id,
+    ).first()
+
+    if not renglon:
+        return JsonResponse({'monto_disponible': None})
+
+    return JsonResponse({'monto_disponible': float(renglon.monto_disponible)})
 
 
 @login_required
