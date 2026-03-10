@@ -201,6 +201,19 @@
       });
     }
 
+    function inicializarFiltroDestino(row) {
+      if (!row) return;
+      const select = row.querySelector('select.js-renglon-ajax');
+      if (!select) return;
+      initAjaxRenglonSelect(select);
+    }
+
+    function inicializarFiltroOrigen() {
+      const origenSelect = document.getElementById('id_renglon_origen');
+      if (!origenSelect) return;
+      initAjaxRenglonSelect(origenSelect);
+    }
+
     const totalForms = document.getElementById('id_destinos-TOTAL_FORMS');
     const initialForms = document.getElementById('id_destinos-INITIAL_FORMS');
     const tbody = document.querySelector('#destinos-table tbody');
@@ -246,7 +259,8 @@
       totalForms.value = tbody.querySelectorAll('.destino-form-row').length;
     }
 
-    document.querySelectorAll('select.js-renglon-ajax').forEach(initAjaxRenglonSelect);
+    inicializarFiltroOrigen();
+    tbody.querySelectorAll('.destino-form-row').forEach(inicializarFiltroDestino);
 
     addBtn.addEventListener('click', function () {
       const index = parseInt(totalForms.value, 10);
@@ -270,10 +284,17 @@
         }
       });
 
+      const destinoSelect = clone.querySelector('select.js-renglon-ajax');
+      if (destinoSelect) {
+        destinoSelect.dataset.ajaxReady = '0';
+        delete destinoSelect.dataset.selectedText;
+        destinoSelect.innerHTML = '<option value="">---------</option>';
+      }
+
       clone.dataset.formIndex = String(index);
       tbody.appendChild(clone);
       totalForms.value = index + 1;
-      clone.querySelectorAll('select.js-renglon-ajax').forEach(initAjaxRenglonSelect);
+      inicializarFiltroDestino(clone);
     });
 
     tbody.addEventListener('click', function (event) {
