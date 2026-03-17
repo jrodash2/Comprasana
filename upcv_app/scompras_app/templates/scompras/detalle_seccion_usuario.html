@@ -289,16 +289,10 @@
 
 <!-- Carga dinámica de subproductos por producto -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const productoSelect = document.getElementById('id_producto');
-  const subproductoSelect = document.getElementById('id_subproducto');
+(function () {
   const url = "{% url 'scompras:ajax_cargar_subproductos' %}";
 
-  if (!productoSelect || !subproductoSelect) {
-    return;
-  }
-
-  function resetSubproductos(texto) {
+  function resetSubproductos(subproductoSelect, texto) {
     subproductoSelect.innerHTML = '';
     const option = document.createElement('option');
     option.value = '';
@@ -306,29 +300,26 @@ document.addEventListener('DOMContentLoaded', function () {
     subproductoSelect.appendChild(option);
   }
 
-  resetSubproductos('Seleccione un subproducto');
-  subproductoSelect.disabled = true;
-
-  productoSelect.addEventListener('change', async function () {
-    const productoId = this.value;
+  async function cargarSubproductos(productoSelect, subproductoSelect) {
+    const productoId = productoSelect.value;
 
     if (!productoId) {
-      resetSubproductos('Seleccione un subproducto');
+      resetSubproductos(subproductoSelect, 'Seleccione un subproducto');
       subproductoSelect.disabled = true;
       return;
     }
 
-    resetSubproductos('Cargando subproductos...');
+    resetSubproductos(subproductoSelect, 'Cargando subproductos...');
     subproductoSelect.disabled = true;
 
     try {
       const response = await fetch(`${url}?producto_id=${encodeURIComponent(productoId)}`);
       if (!response.ok) {
-        throw new Error('Error de red al obtener subproductos');
+        throw new Error('Error al cargar subproductos');
       }
 
       const data = await response.json();
-      resetSubproductos('Seleccione un subproducto');
+      resetSubproductos(subproductoSelect, 'Seleccione un subproducto');
 
       data.forEach(function (item) {
         const option = document.createElement('option');
@@ -339,11 +330,39 @@ document.addEventListener('DOMContentLoaded', function () {
 
       subproductoSelect.disabled = data.length === 0;
     } catch (error) {
-      resetSubproductos('No se pudieron cargar los subproductos');
+      resetSubproductos(subproductoSelect, 'No se pudieron cargar los subproductos');
       subproductoSelect.disabled = true;
     }
-  });
-});
+  }
+
+  function inicializar() {
+    document.querySelectorAll('form').forEach(function (form) {
+      const productoSelect = form.querySelector('select[name="producto"]');
+      const subproductoSelect = form.querySelector('select[name="subproducto"]');
+
+      if (!productoSelect || !subproductoSelect) {
+        return;
+      }
+
+      resetSubproductos(subproductoSelect, 'Seleccione un subproducto');
+      subproductoSelect.disabled = true;
+
+      productoSelect.addEventListener('change', function () {
+        cargarSubproductos(productoSelect, subproductoSelect);
+      });
+
+      if (productoSelect.value) {
+        cargarSubproductos(productoSelect, subproductoSelect);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inicializar);
+  } else {
+    inicializar();
+  }
+})();
 </script>
 
 {% endblock %}
