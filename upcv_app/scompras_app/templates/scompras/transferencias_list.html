@@ -47,7 +47,7 @@
                       <form method="post" action="{% url 'scompras:reversar_transferencia' transferencia.id %}" class="d-inline-flex gap-2 align-items-center">
                         {% csrf_token %}
                         <input type="text" name="motivo" class="form-control form-control-sm" style="max-width: 220px;" placeholder="Motivo" required>
-                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Confirma reversar la transferencia #{{ transferencia.id }}?');">Reversar</button>
+                        <button type="submit" class="btn btn-sm btn-outline-danger js-reversar-transferencia" data-transferencia-id="{{ transferencia.id }}">Reversar</button>
                       </form>
                     {% endif %}
                   </td>
@@ -64,4 +64,53 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+
+{% block extra_js %}
+  {{ block.super }}
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.addEventListener('submit', function (event) {
+        const form = event.target;
+        if (!form.matches('form[action*="reversar_transferencia"]')) {
+          return;
+        }
+
+        if (form.dataset.swalConfirmed === 'true') {
+          return;
+        }
+
+        event.preventDefault();
+
+        const button = form.querySelector('.js-reversar-transferencia');
+        const transferenciaId = button ? button.dataset.transferenciaId : '';
+
+        Swal.fire({
+          title: 'Confirmar reversión',
+          text: `¿Está seguro de reversar la transferencia #${transferenciaId}? Esta acción restaurará los montos involucrados.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, reversar',
+          cancelButtonText: 'Cancelar',
+          reverseButtons: true,
+          focusCancel: true,
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          showClass: {
+            popup: 'animate__animated animate__fadeInDown animate__faster'
+          },
+          hideClass: {
+            popup: 'animate__animated animate__fadeOutUp animate__faster'
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.dataset.swalConfirmed = 'true';
+            form.submit();
+          }
+        });
+      });
+    });
+  </script>
 {% endblock %}
