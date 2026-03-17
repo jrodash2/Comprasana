@@ -44,10 +44,10 @@
                     {% if transferencia.id in transferencias_revertidas %}
                       <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Revertida</button>
                     {% else %}
-                      <form method="post" action="{% url 'scompras:reversar_transferencia' transferencia.id %}" class="d-inline-flex gap-2 align-items-center">
+                      <form method="post" action="{% url 'scompras:reversar_transferencia' transferencia.id %}" class="d-inline-flex gap-2 align-items-center js-reversar-transferencia-form" data-transferencia-id="{{ transferencia.id }}">
                         {% csrf_token %}
                         <input type="text" name="motivo" class="form-control form-control-sm" style="max-width: 220px;" placeholder="Motivo" required>
-                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Confirma reversar la transferencia #{{ transferencia.id }}?');">Reversar</button>
+                        <button type="submit" class="btn btn-sm btn-outline-danger js-reversar-transferencia" data-transferencia-id="{{ transferencia.id }}">Reversar</button>
                       </form>
                     {% endif %}
                   </td>
@@ -64,4 +64,96 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+
+{% block extra_js %}
+  {{ block.super }}
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const getTransferForm = (element) => element.closest('.js-reversar-transferencia-form');
+
+      const confirmReversion = (form) => {
+        if (!form || form.dataset.swalOpen === 'true') {
+          return;
+        }
+
+        const transferenciaId = form.dataset.transferenciaId || '';
+        form.dataset.swalOpen = 'true';
+
+        Swal.fire({
+          title: 'Confirmar reversión',
+          text: `¿Está seguro de reversar la transferencia #${transferenciaId}? Esta acción restaurará los montos involucrados.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, reversar',
+          cancelButtonText: 'Cancelar',
+          reverseButtons: true,
+          focusCancel: true,
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          showClass: {
+            popup: 'animate__animated animate__fadeInDown animate__faster'
+          },
+          hideClass: {
+            popup: 'animate__animated animate__fadeOutUp animate__faster'
+          }
+        }).then((result) => {
+          form.dataset.swalOpen = 'false';
+          if (result.isConfirmed) {
+            form.dataset.swalConfirmed = 'true';
+            form.submit();
+          }
+        });
+      };
+
+      document.addEventListener('click', function (event) {
+        const button = event.target.closest('.js-reversar-transferencia');
+        if (!button) {
+          return;
+        }
+
+        const form = getTransferForm(button);
+        if (!form || form.dataset.swalConfirmed === 'true') {
+          return;
+        }
+
+        event.preventDefault();
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+
+        if (!window.Swal || typeof Swal.fire !== 'function') {
+          if (window.confirm(`¿Confirma reversar la transferencia #${form.dataset.transferenciaId}?`)) {
+            form.dataset.swalConfirmed = 'true';
+            form.submit();
+          }
+          return;
+        }
+
+        confirmReversion(form);
+      });
+
+      document.addEventListener('submit', function (event) {
+        const form = getTransferForm(event.target);
+        if (!form) {
+          return;
+        }
+
+        if (form.dataset.swalConfirmed === 'true') {
+          return;
+        }
+
+        event.preventDefault();
+
+        if (!window.Swal || typeof Swal.fire !== 'function') {
+          return;
+        }
+
+        confirmReversion(form);
+      });
+    });
+  </script>
 {% endblock %}
