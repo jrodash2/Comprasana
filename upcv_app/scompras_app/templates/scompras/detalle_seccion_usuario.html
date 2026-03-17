@@ -287,25 +287,60 @@
 
 
 
-<!-- Inicializar DataTables + AJAX subproducto -->
+<!-- Carga dinámica de subproductos por producto -->
 <script>
-var $subproducto = $('#id_subproducto');
-$subproducto.prop('disabled', true);
+document.addEventListener('DOMContentLoaded', function () {
+  const productoSelect = document.getElementById('id_producto');
+  const subproductoSelect = document.getElementById('id_subproducto');
+  const url = "{% url 'scompras:ajax_cargar_subproductos' %}";
 
-$('#id_producto').change(function () {
-  var productoId = $(this).val();
-  var url = "{% url 'scompras:ajax_cargar_subproductos' %}";
+  if (!productoSelect || !subproductoSelect) {
+    return;
+  }
 
-  $.ajax({
-    url: url,
-    data: { 'producto_id': productoId },
-    success: function (data) {
-      $subproducto.empty();
-      $subproducto.append('<option value="">Seleccione un subproducto</option>');
-      $.each(data, function (index, item) {
-        $subproducto.append('<option value="' + item.id + '">' + item.nombre + '</option>');
+  function resetSubproductos(texto) {
+    subproductoSelect.innerHTML = '';
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = texto;
+    subproductoSelect.appendChild(option);
+  }
+
+  resetSubproductos('Seleccione un subproducto');
+  subproductoSelect.disabled = true;
+
+  productoSelect.addEventListener('change', async function () {
+    const productoId = this.value;
+
+    if (!productoId) {
+      resetSubproductos('Seleccione un subproducto');
+      subproductoSelect.disabled = true;
+      return;
+    }
+
+    resetSubproductos('Cargando subproductos...');
+    subproductoSelect.disabled = true;
+
+    try {
+      const response = await fetch(`${url}?producto_id=${encodeURIComponent(productoId)}`);
+      if (!response.ok) {
+        throw new Error('Error de red al obtener subproductos');
+      }
+
+      const data = await response.json();
+      resetSubproductos('Seleccione un subproducto');
+
+      data.forEach(function (item) {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.nombre;
+        subproductoSelect.appendChild(option);
       });
-      $subproducto.prop('disabled', data.length === 0);
+
+      subproductoSelect.disabled = data.length === 0;
+    } catch (error) {
+      resetSubproductos('No se pudieron cargar los subproductos');
+      subproductoSelect.disabled = true;
     }
   });
 });
